@@ -1,30 +1,39 @@
 // src/auth/auth.controller.ts
 import { Body, Controller, Post } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import {
 	ForgotPasswordDto,
 	LoginDto,
 	RegisterDto,
 	ResetPasswordDto,
 } from './dto/auth.dto';
+import { AuthService } from './services/auth.service';
 
 @Controller('auth')
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
 	@Post('register')
-	register(@Body() dto: RegisterDto) {
-		return this.authService.register(dto);
+	async register(@Body() dto: RegisterDto) {
+		await this.authService.register(dto);
+
+		return new ResponseSuccess();
 	}
 
 	@Post('login')
-	login(@Body() dto: LoginDto) {
+	async login(@Body() dto: LoginDto) {
 		return this.authService.login(dto);
 	}
 
+	// @Post('refresh')
+	// async refresh(@Body('refreshToken') refreshToken: string) {
+	// 	return this.authService.refreshTokens(refreshToken);
+	// }
+
 	@Post('forgot-password')
-	forgotPassword(@Body() dto: ForgotPasswordDto) {
-		return this.authService.forgotPassword(dto.email);
+	async forgotPassword(@Body() dto: ForgotPasswordDto) {
+		await this.authService.forgotPassword(dto.email);
+		return new ResponseSuccess();
 	}
 
 	@Post('reset-password')

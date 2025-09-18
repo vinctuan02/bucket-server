@@ -17,4 +17,7 @@ export class UserEntity {
 
 	@Column({ nullable: true })
 	fullName?: string;
+
+	@Column()
+	role: string;
 }
