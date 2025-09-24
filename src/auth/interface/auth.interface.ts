@@ -9,5 +9,5 @@ export interface IAuthPayload {
 	sub: string;
 	email: string;
 	type: TypeToken;
-	role: string;
+	// role: string;
 }

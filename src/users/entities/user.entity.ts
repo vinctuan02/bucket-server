@@ -1,10 +1,12 @@
 // src/users/entities/user.entity.ts
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseUserUUIDEntity } from 'src/common/entities/common.entity';
+import { UserRole } from 'src/user-role/entities/user-role.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('users')
-export class UserEntity {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
+export class User extends BaseUserUUIDEntity {
+	@Column()
+	name: string;
 
 	@Column({ unique: true })
 	email: string;
@@ -12,12 +14,14 @@ export class UserEntity {
 	@Column()
 	password: string;
 
-	@Column({ default: true })
-	isActive: boolean;
+	@OneToMany(() => UserRole, (userRole) => userRole.user)
+	userRoles: UserRole[];
 
-	@Column({ nullable: true })
-	fullName?: string;
+	// @ManyToOne(() => User)
+	// @JoinColumn({ name: 'creator_id' })
+	// creator: User;
 
-	@Column()
-	role: string;
+	// @ManyToOne(() => User)
+	// @JoinColumn({ name: 'modifier_id' })
+	// modifier: User;
 }

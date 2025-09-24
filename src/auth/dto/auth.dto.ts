@@ -9,7 +9,7 @@ export class RegisterDto {
 	password: string;
 
 	@IsNotEmpty()
-	fullName: string;
+	name: string;
 }
 
 export class LoginDto {

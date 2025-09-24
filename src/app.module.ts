@@ -5,11 +5,19 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
+import { validationSchema } from './common/config/common.validate-env';
+import { PermissionModule } from './permission/permission.module';
+import { RolePermissionModule } from './role-permission/role-permission.module';
+import { RoleModule } from './role/role.module';
+import { UserRoleModule } from './user-role/user-role.module';
 import { UsersModule } from './users/user.module';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot({ isGlobal: true }),
+		ConfigModule.forRoot({
+			isGlobal: true,
+			validationSchema,
+		}),
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
@@ -17,6 +25,11 @@ import { UsersModule } from './users/user.module';
 		}),
 		UsersModule,
 		BucketModule,
+
+		RoleModule,
+		PermissionModule,
+		UserRoleModule,
+		RolePermissionModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

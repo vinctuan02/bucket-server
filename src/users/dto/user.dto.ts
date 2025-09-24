@@ -10,7 +10,8 @@ export class CreateUserDto {
 	@MinLength(6)
 	password: string;
 
-	fullName?: string;
+	@IsNotEmpty()
+	name: string;
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}

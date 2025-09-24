@@ -9,6 +9,7 @@ import {
 	Post,
 	Query,
 } from '@nestjs/common';
+import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import { CreateUserDto, GetListUserDto, UpdateUserDto } from './dto/user.dto';
 import { UsersService } from './services/user.service';
 
@@ -17,27 +18,32 @@ export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
 	@Post()
-	create(@Body() dto: CreateUserDto) {
-		return this.usersService.create(dto);
+	async create(@Body() dto: CreateUserDto) {
+		const data = await this.usersService.create(dto);
+		return new ResponseSuccess({ data });
 	}
 
 	@Get()
-	getList(@Query() query: GetListUserDto) {
-		return this.usersService.getList(query);
+	async getList(@Query() query: GetListUserDto) {
+		const data = await this.usersService.getList(query);
+		return new ResponseSuccess({ data });
 	}
 
 	@Get(':id')
-	findOne(@Param('id') id: string) {
-		return this.usersService.findOne(id);
+	async findOne(@Param('id') id: string) {
+		const data = await this.usersService.findOne(id);
+		return new ResponseSuccess({ data });
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-		return this.usersService.update(id, dto);
+	async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+		const data = await this.usersService.update(id, dto);
+		return new ResponseSuccess({ data });
 	}
 
 	@Delete(':id')
-	remove(@Param('id') id: string) {
-		return this.usersService.remove(id);
+	async remove(@Param('id') id: string) {
+		const data = await this.usersService.remove(id);
+		return new ResponseSuccess({ data });
 	}
 }

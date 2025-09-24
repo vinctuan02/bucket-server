@@ -3,21 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PageDto } from 'src/common/dto/common.response-dto';
 import { Repository } from 'typeorm';
 import { CreateUserDto, GetListUserDto, UpdateUserDto } from '../dto/user.dto';
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
+import { hashPass } from '../util/user.ulti';
 import { UserQueryService } from './user.query.service';
 
 @Injectable()
 export class UsersService {
 	constructor(
-		@InjectRepository(UserEntity)
-		private readonly usersRepo: Repository<UserEntity>,
+		@InjectRepository(User)
+		private readonly userRepo: Repository<User>,
 
 		private readonly userQueryService: UserQueryService,
 	) {}
 
-	async create(dto: CreateUserDto): Promise<UserEntity> {
-		const user = this.usersRepo.create(dto);
-		return this.usersRepo.save(user);
+	async create(dto: CreateUserDto): Promise<User> {
+		const { password, email } = dto;
+		await this.userQueryService.ensureEmailNotExists(email);
+		dto.password = await hashPass(password);
+		return await this.userQueryService.create(dto);
 	}
 
 	async getList(query: GetListUserDto) {
@@ -32,23 +35,23 @@ export class UsersService {
 		});
 	}
 
-	async findOne(id: string): Promise<UserEntity> {
-		const user = await this.usersRepo.findOne({ where: { id } });
+	async findOne(id: string): Promise<User> {
+		const user = await this.userRepo.findOne({ where: { id } });
 		if (!user) throw new NotFoundException(`User ${id} not found`);
 		return user;
 	}
 
 	async findByEmail(email: string) {
-		return this.usersRepo.findOne({ where: { email } });
+		return this.userRepo.findOne({ where: { email } });
 	}
 
-	async update(id: string, dto: UpdateUserDto): Promise<UserEntity> {
+	async update(id: string, dto: UpdateUserDto): Promise<User> {
 		const user = await this.findOne(id);
 		Object.assign(user, dto);
-		return this.usersRepo.save(user);
+		return this.userRepo.save(user);
 	}
 
 	async remove(id: string): Promise<void> {
-		await this.usersRepo.delete(id);
+		await this.userRepo.delete(id);
 	}
 }
