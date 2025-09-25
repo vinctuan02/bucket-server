@@ -19,7 +19,7 @@ export class UsersController {
 
 	@Post()
 	async create(@Body() dto: CreateUserDto) {
-		const data = await this.usersService.create(dto);
+		const data = await this.usersService.handleCreate(dto);
 		return new ResponseSuccess({ data });
 	}
 
@@ -31,7 +31,7 @@ export class UsersController {
 
 	@Get(':id')
 	async findOne(@Param('id') id: string) {
-		const data = await this.usersService.findOne(id);
+		const data = await this.usersService.findOneWithPermissions(id);
 		return new ResponseSuccess({ data });
 	}
 

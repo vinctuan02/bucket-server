@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PageDto } from 'src/common/dto/common.response-dto';
+import { UserRoleService } from 'src/user-role/user-role.service';
 import { Repository } from 'typeorm';
 import { CreateUserDto, GetListUserDto, UpdateUserDto } from '../dto/user.dto';
 import { User } from '../entities/user.entity';
@@ -14,13 +15,30 @@ export class UsersService {
 		private readonly userRepo: Repository<User>,
 
 		private readonly userQueryService: UserQueryService,
+		private readonly userRolesService: UserRoleService,
 	) {}
 
-	async create(dto: CreateUserDto): Promise<User> {
-		const { password, email } = dto;
+	async handleCreate(dto: CreateUserDto) {
+		const { userRoles, ...rest } = dto;
+
+		const user = await this.create(rest);
+		Promise.all(
+			userRoles.map((item) =>
+				this.userRolesService.createSafe({
+					roleId: item.roleId,
+					userId: user.id,
+				}),
+			),
+		);
+
+		return await this.findOneWithPermissions(user.id);
+	}
+
+	async create(input: Omit<CreateUserDto, 'userRoles'>): Promise<User> {
+		const { password, email } = input;
 		await this.userQueryService.ensureEmailNotExists(email);
-		dto.password = await hashPass(password);
-		return await this.userQueryService.create(dto);
+		input.password = await hashPass(password);
+		return await this.userQueryService.create(input);
 	}
 
 	async getList(query: GetListUserDto) {
@@ -38,6 +56,25 @@ export class UsersService {
 	async findOne(id: string): Promise<User> {
 		const user = await this.userRepo.findOne({ where: { id } });
 		if (!user) throw new NotFoundException(`User ${id} not found`);
+		return user;
+	}
+
+	async findOneWithPermissions(id: string) {
+		const user = await this.userRepo.findOne({
+			where: { id },
+			relations: {
+				userRoles: {
+					role: {
+						rolePermissions: {
+							permission: true,
+						},
+					},
+				},
+			},
+		});
+
+		if (!user) throw new NotFoundException(`User ${id} not found`);
+
 		return user;
 	}
 

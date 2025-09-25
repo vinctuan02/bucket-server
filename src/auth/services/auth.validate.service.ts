@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { UsersService } from 'src/users/services/user.service';
+import { comparePass } from 'src/users/util/user.ulti';
 import { LoginDto } from '../dto/auth.dto';
 
 @Injectable()
@@ -28,8 +28,8 @@ export class AuthValidateService {
 
 	async validateLogin({ email, password }: LoginDto) {
 		const user = await this.ensureEmailExists(email);
+		const isMatch = await comparePass(password, user.password);
 
-		const isMatch = await bcrypt.compare(password, user.password);
 		if (!isMatch)
 			throw new ResponseError({ message: 'Invalid credentials' });
 

@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, MinLength } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
 
 export class CreateUserDto {
@@ -12,6 +12,11 @@ export class CreateUserDto {
 
 	@IsNotEmpty()
 	name: string;
+
+	@IsOptional()
+	userRoles: {
+		roleId: string;
+	}[] = [];
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}

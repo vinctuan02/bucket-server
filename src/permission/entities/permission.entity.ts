@@ -1,11 +1,9 @@
+import { BaseUserUUIDEntity } from 'src/common/entities/common.entity';
 import { RolePermission } from 'src/role-permission/entities/role-permission.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 
-@Entity()
-export class Permission {
-	@PrimaryGeneratedColumn()
-	id: number;
-
+@Entity('permissions')
+export class Permission extends BaseUserUUIDEntity {
 	@Column()
 	action: string;
 

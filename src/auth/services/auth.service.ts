@@ -23,14 +23,7 @@ export class AuthService {
 	>();
 
 	async register(dto: RegisterDto) {
-		const { email } = dto;
-		await this.authValidateService.ensureEmailNotExists(email);
-
-		const hashed = await bcrypt.hash(dto.password, 10);
-		await this.usersService.create({
-			...dto,
-			password: hashed,
-		});
+		await this.usersService.create(dto);
 	}
 
 	async login(dto: LoginDto): Promise<IAuthToken> {

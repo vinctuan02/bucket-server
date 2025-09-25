@@ -3,7 +3,7 @@ import { RolePermission } from 'src/role-permission/entities/role-permission.ent
 import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
-@Entity()
+@Entity('roles')
 export class Role extends BaseUserUUIDEntity {
 	@Column({ unique: true })
 	name: string;

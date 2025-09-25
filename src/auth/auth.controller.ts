@@ -22,7 +22,8 @@ export class AuthController {
 
 	@Post('login')
 	async login(@Body() dto: LoginDto) {
-		return this.authService.login(dto);
+		const data = await this.authService.login(dto);
+		return new ResponseSuccess({ data });
 	}
 
 	// @Post('refresh')
