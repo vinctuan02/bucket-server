@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
 import { validationSchema } from './common/config/common.validate-env';
+import { NotificationModule } from './notification/notification.module';
 import { PermissionModule } from './permission/permission.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { RoleModule } from './role/role.module';
@@ -24,6 +25,8 @@ import { UsersModule } from './users/user.module';
 			inject: [ConfigService],
 			useFactory: getDatabaseConfig,
 		}),
+
+		NotificationModule,
 		UsersModule,
 		AuthModule,
 		BucketModule,

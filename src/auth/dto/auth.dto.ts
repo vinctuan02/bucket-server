@@ -12,6 +12,18 @@ export class RegisterDto {
 	name: string;
 }
 
+export class VerifyAccountDto {
+	@IsEmail()
+	email: string;
+
+	@IsNotEmpty()
+	@MinLength(6)
+	password: string;
+
+	@IsNotEmpty()
+	name: string;
+}
+
 export class LoginDto {
 	@IsEmail()
 	email: string;

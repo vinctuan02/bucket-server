@@ -11,4 +11,9 @@ export const validationSchema = Joi.object({
 	DEFAULT_NAME: Joi.string().min(3).required(),
 	DEFAULT_EMAIL: Joi.string().email().required(),
 	DEFAULT_PASS: Joi.string().min(6).required(),
+	DEFAULT_IS_ACTIVE: Joi.boolean().required(),
+
+	EMAIL_SERVICE: Joi.string().required(),
+	EMAIL_USER: Joi.string().email().required(),
+	EMAIL_PASS: Joi.string().required(),
 });

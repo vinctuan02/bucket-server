@@ -1,20 +1,31 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import { generateSixDigitOtp } from 'src/common/util/common.util';
+import { NotificationService } from 'src/notification/services/notification.service';
 import { UsersService } from 'src/users/services/user.service';
 import { LoginDto, RegisterDto } from '../dto/auth.dto';
 import { TypeToken } from '../enum/auth.enum';
-import { IAuthPayload, IAuthToken } from '../interface/auth.interface';
+import {
+	IAuthPayload,
+	IAuthToken,
+	IVerificationCode,
+} from '../interface/auth.interface';
 import { AuthValidateService } from './auth.validate.service';
 
 @Injectable()
 export class AuthService {
+	private logger = new Logger(AuthService.name);
+
+	private verificationCodes = new Map<string, IVerificationCode>();
+
 	constructor(
 		private readonly usersService: UsersService,
 		private readonly jwtService: JwtService,
 		private readonly authValidateService: AuthValidateService,
+		private readonly notificationService: NotificationService,
 	) {}
 
 	private resetTokens = new Map<
@@ -23,7 +34,19 @@ export class AuthService {
 	>();
 
 	async register(dto: RegisterDto) {
-		await this.usersService.create(dto);
+		const newUser = await this.usersService.create(dto);
+		const { code } = this.createVerificationCode(newUser.id);
+
+		this.notificationService
+			.sendEmailAccountVerification({
+				recipientId: newUser.id,
+				code,
+			})
+			.catch((err) => {
+				this.logger.error('Error sending verification email:', err);
+			});
+
+		return newUser;
 	}
 
 	async login(dto: LoginDto): Promise<IAuthToken> {
@@ -107,5 +130,21 @@ export class AuthService {
 			{ ...input, type: TypeToken.REFRESH },
 			{ expiresIn: '7d' },
 		);
+	}
+
+	private createVerificationCode(userId: string) {
+		const verification: IVerificationCode = {
+			userId,
+			code: generateSixDigitOtp(),
+			expiredAt: Date.now() + 15 * 60 * 1000,
+		};
+
+		this.verificationCodes.set(userId, verification);
+
+		return verification;
+	}
+
+	private getVerificationCode(userId: string) {
+		return this.verificationCodes.get(userId);
 	}
 }
