@@ -11,3 +11,9 @@ export interface IAuthPayload {
 	type: TypeToken;
 	// role: string;
 }
+
+export interface IVerificationCode {
+	userId: string;
+	code: string;
+	expiredAt: number;
+}

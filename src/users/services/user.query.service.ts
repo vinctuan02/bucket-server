@@ -82,6 +82,7 @@ export class UserQueryService implements OnModuleInit {
 				id: this.configService.get<string>('DEFAULT_USER_ID'),
 				name: this.configService.get<string>('DEFAULT_NAME'),
 				password,
+				isActive: this.configService.get<boolean>('DEFAULT_IS_ACTIVE'),
 				email: this.configService.get<string>('DEFAULT_EMAIL'),
 			});
 

@@ -5,6 +5,9 @@ import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('users')
 export class User extends BaseUserUUIDEntity {
+	@Column({ default: false })
+	isActive: boolean;
+
 	@Column()
 	name: string;
 

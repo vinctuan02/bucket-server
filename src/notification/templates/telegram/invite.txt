@@ -1,0 +1,5 @@
+Hi {{userName}},
+
+{{inviterName}} invited you to join workspace "{{workspaceName}}".
+
+Accept here: {{inviteLink}}

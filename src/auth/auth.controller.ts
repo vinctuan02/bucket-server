@@ -15,10 +15,15 @@ export class AuthController {
 
 	@Post('register')
 	async register(@Body() dto: RegisterDto) {
-		await this.authService.register(dto);
-
-		return new ResponseSuccess();
+		const data = await this.authService.register(dto);
+		return new ResponseSuccess({ data });
 	}
+
+	// @Post('verify-account')
+	// async verifyAccoun(@Body() body: { userId: string; code: string }) {
+	// 	const data = await this.authService.verifyAccoun(body);
+	// 	return new ResponseSuccess({ data });
+	// }
 
 	@Post('login')
 	async login(@Body() dto: LoginDto) {
