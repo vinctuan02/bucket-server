@@ -2,7 +2,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
+import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
+import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
+import { Repository } from 'typeorm';
 import { PermissionResponse } from '../constants/permission.constant';
 import { GetListPermissionDto } from '../dto/permission.dto';
 import { Permission } from '../entities/permission.entity';
@@ -13,6 +16,9 @@ export class PermissionQueryService {
 	constructor(
 		@InjectRepository(Permission)
 		private readonly permissionRepo: Repository<Permission>,
+
+		private readonly ormUtilsCreateQb: OrmUtilsCreateQb,
+		private readonly ormUtilsWhere: OrmUtilsWhere,
 	) {}
 
 	async create(dto: Partial<Permission>) {
@@ -21,8 +27,15 @@ export class PermissionQueryService {
 	}
 
 	async getList(query: GetListPermissionDto) {
-		const qb = this.createBaseQuery();
-		this.implementFilter(query, qb);
+		const { keywords, page, pageSize } = query;
+
+		const qb = this.ormUtilsCreateQb.createPermissionQb();
+
+		const ormFilter: OrmFilterDto = {
+			keywordsPermission: keywords,
+		};
+
+		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilter });
 
 		const [items, totalItems] = await qb.getManyAndCount();
 		return { items, totalItems };
@@ -39,18 +52,5 @@ export class PermissionQueryService {
 		const exists = await this.permissionRepo.findOne({ where: { id } });
 		if (!exists) throw new ResponseError(PermissionResponse.NOT_FOUND);
 		return exists;
-	}
-
-	// private
-	private createBaseQuery() {
-		return this.permissionRepo.createQueryBuilder('permission');
-	}
-
-	private implementFilter(
-		_query: GetListPermissionDto,
-		qb: SelectQueryBuilder<Permission>,
-	) {
-		// TODO: add filter if needed
-		return qb;
 	}
 }

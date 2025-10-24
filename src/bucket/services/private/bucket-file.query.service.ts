@@ -21,7 +21,7 @@ export class BucketFileQueryService {
 		filter: GetListFileBucketDto,
 		qb: SelectQueryBuilder<FileEntity>,
 	) {
-		const { keyword } = filter;
+		const { keywords } = filter;
 	}
 
 	private createQueryGetList(filter: GetListFileBucketDto) {

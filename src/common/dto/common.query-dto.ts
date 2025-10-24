@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+	IsArray,
 	IsDate,
 	IsEnum,
 	IsInt,
@@ -14,9 +15,20 @@ export abstract class BaseQueryDto {
 	/** Full‑text search keyword */
 
 	@IsOptional()
-	@IsString()
-	@Transform(({ value }: { value: string | undefined }) => value?.trim())
-	keyword?: string;
+	@IsArray()
+	@IsString({ each: true })
+	@Transform(({ value }: { value: string | string[] | undefined }) => {
+		if (!value) return [];
+		if (typeof value === 'string') {
+			return value
+				.split(',')
+				.map((v) => v.trim())
+				.filter((v) => v.length > 0);
+		}
+
+		return value.map((v) => v.trim());
+	})
+	keywords?: string[];
 
 	/** 1‑based page number */
 

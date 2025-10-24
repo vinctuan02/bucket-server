@@ -4,7 +4,7 @@ import { RolePermission } from 'src/role-permission/entities/role-permission.ent
 import { Column, Entity, OneToMany } from 'typeorm';
 import { PermissionAction } from '../enums/permission.enum';
 
-@Entity('permissions1')
+@Entity('permissions')
 export class Permission extends BaseUserUUIDEntity {
 	@Column()
 	name: string;
