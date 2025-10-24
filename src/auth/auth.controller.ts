@@ -4,8 +4,11 @@ import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import {
 	ForgotPasswordDto,
 	LoginDto,
+	RefreshTokenDto,
 	RegisterDto,
 	ResetPasswordDto,
+	VerifyAccountDto,
+	VerifyResetCodeDto,
 } from './dto/auth.dto';
 import { AuthService } from './services/auth.service';
 
@@ -19,11 +22,14 @@ export class AuthController {
 		return new ResponseSuccess({ data });
 	}
 
-	// @Post('verify-account')
-	// async verifyAccoun(@Body() body: { userId: string; code: string }) {
-	// 	const data = await this.authService.verifyAccoun(body);
-	// 	return new ResponseSuccess({ data });
-	// }
+	@Post('verify-email')
+	async verify(@Body() body: VerifyAccountDto) {
+		const data = await this.authService.verifyAccount(body);
+		return new ResponseSuccess({
+			data,
+			message: 'Account verified successfully',
+		});
+	}
 
 	@Post('login')
 	async login(@Body() dto: LoginDto) {
@@ -31,19 +37,30 @@ export class AuthController {
 		return new ResponseSuccess({ data });
 	}
 
-	// @Post('refresh')
-	// async refresh(@Body('refreshToken') refreshToken: string) {
-	// 	return this.authService.refreshTokens(refreshToken);
-	// }
+	@Post('refresh-token')
+	async refreshTokens(@Body() dto: RefreshTokenDto) {
+		const data = this.authService.refreshTokens(dto);
+		return new ResponseSuccess({ data });
+	}
 
 	@Post('forgot-password')
 	async forgotPassword(@Body() dto: ForgotPasswordDto) {
 		await this.authService.forgotPassword(dto.email);
-		return new ResponseSuccess();
+		return new ResponseSuccess({ message: 'Reset code sent to email' });
+	}
+
+	@Post('verify-reset-code')
+	async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
+		const data = await this.authService.verifyResetCode(dto);
+		return new ResponseSuccess({
+			message: 'Code verified successfully',
+			data,
+		});
 	}
 
 	@Post('reset-password')
-	resetPassword(@Body() dto: ResetPasswordDto) {
-		return this.authService.resetPassword(dto.token, dto.newPassword);
+	async resetPassword(@Body() dto: ResetPasswordDto) {
+		await this.authService.resetPassword(dto);
+		return new ResponseSuccess({ message: 'Password reset successfully' });
 	}
 }

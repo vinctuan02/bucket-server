@@ -34,4 +34,22 @@ export class NotificationHelperService {
 		`;
 		return { subject, html };
 	}
+
+	getResetPasswordTemplate(code: string): {
+		subject: string;
+		html: string;
+	} {
+		const subject = 'CloudBox Password Reset Request';
+		const html = `
+			<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+				<h2 style="color: #4a90e2;">Password Reset Request</h2>
+				<p>We received a request to reset your CloudBox password. Use the verification code below to proceed with resetting your password:</p>
+				<p style="font-size: 24px; font-weight: bold; color: #4a90e2; letter-spacing: 3px;">${code}</p>
+				<p>If you didn’t request a password reset, please ignore this email or contact support if you have concerns.</p>
+				<br/>
+				<p>Best regards,<br/><strong>The CloudBox Team</strong></p>
+			</div>
+		`;
+		return { subject, html };
+	}
 }

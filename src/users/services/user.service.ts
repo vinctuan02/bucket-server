@@ -41,6 +41,12 @@ export class UsersService {
 		return await this.userQueryService.create(input);
 	}
 
+	async activeAccount(id: string): Promise<User> {
+		const user = await this.findOne(id);
+		user.isActive = true;
+		return this.userRepo.save(user);
+	}
+
 	async getList(query: GetListUserDto) {
 		const { page: currentPage, pageSize } = query;
 

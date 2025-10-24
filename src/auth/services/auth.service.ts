@@ -1,12 +1,18 @@
 // src/auth/auth.service.ts
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
+import { ResponseError } from 'src/common/dto/common.response-dto';
 import { generateSixDigitOtp } from 'src/common/util/common.util';
 import { NotificationService } from 'src/notification/services/notification.service';
 import { UsersService } from 'src/users/services/user.service';
-import { LoginDto, RegisterDto } from '../dto/auth.dto';
+import {
+	LoginDto,
+	RefreshTokenDto,
+	RegisterDto,
+	ResetPasswordDto,
+	VerifyAccountDto,
+} from '../dto/auth.dto';
 import { TypeToken } from '../enum/auth.enum';
 import {
 	IAuthPayload,
@@ -18,7 +24,6 @@ import { AuthValidateService } from './auth.validate.service';
 @Injectable()
 export class AuthService {
 	private logger = new Logger(AuthService.name);
-
 	private verificationCodes = new Map<string, IVerificationCode>();
 
 	constructor(
@@ -27,11 +32,6 @@ export class AuthService {
 		private readonly authValidateService: AuthValidateService,
 		private readonly notificationService: NotificationService,
 	) {}
-
-	private resetTokens = new Map<
-		string,
-		{ userId: string; expiredAt: number }
-	>();
 
 	async register(dto: RegisterDto) {
 		const newUser = await this.usersService.create(dto);
@@ -49,6 +49,28 @@ export class AuthService {
 		return newUser;
 	}
 
+	async verifyAccount(dto: VerifyAccountDto) {
+		const { userId, code } = dto;
+
+		const verification = this.getVerificationCode(userId);
+
+		if (!verification || verification.code !== code) {
+			throw new ResponseError({ message: 'Invalid verification code' });
+		}
+
+		const user = await this.usersService.findOne(userId);
+
+		if (user.isActive) {
+			this.verificationCodes.delete(userId);
+			throw new ResponseError({ message: 'Account already verified' });
+		}
+
+		const result = await this.usersService.activeAccount(userId);
+
+		this.verificationCodes.delete(userId);
+		return result;
+	}
+
 	async login(dto: LoginDto): Promise<IAuthToken> {
 		const user = await this.authValidateService.validateLogin(dto);
 
@@ -60,52 +82,61 @@ export class AuthService {
 		return this.generateTokens(payload);
 	}
 
-	// refreshTokens(refreshToken: string) {
-	// 	try {
-	// 		const payload = this.jwtService.verify(refreshToken);
+	refreshTokens(dto: RefreshTokenDto) {
+		const payload = this.jwtService.verify(dto.refreshToken);
 
-	// 		if (payload.type !== TypeToken.REFRESH) {
-	// 			throw new UnauthorizedException('Invalid token type');
-	// 		}
+		if (payload.type !== TypeToken.REFRESH) {
+			throw new ResponseError({ message: 'Invalid token type' });
+		}
 
-	// 		return this.generateTokens({
-	// 			sub: payload.sub,
-	// 			email: payload.email,
-	// 			role: payload.role,
-	// 		});
-	// 	} catch {
-	// 		throw new UnauthorizedException('Invalid or expired refresh token');
-	// 	}
-	// }
+		return this.generateTokens({
+			sub: payload.sub,
+			email: payload.email,
+		});
+	}
 
 	async forgotPassword(email: string) {
 		const user = await this.authValidateService.ensureEmailExists(email);
 
-		const token = randomBytes(32).toString('hex');
-
-		this.resetTokens.set(token, {
-			userId: user.id,
-			expiredAt: Date.now() + 15 * 60 * 1000,
-		});
-
-		// send to email
-	}
-
-	async resetPassword(token: string, newPassword: string) {
-		const record = this.resetTokens.get(token);
-
-		if (!record || Date.now() > record.expiredAt) {
-			this.resetTokens.delete(token);
-			throw new UnauthorizedException('Invalid or expired token');
+		if (!user.isActive) {
+			throw new ResponseError({ message: 'Account is not active' });
 		}
 
+		const { code } = this.createVerificationCode(user.id);
+
+		this.notificationService
+			.sendEmailResetPassword({
+				recipientId: user.id,
+				code,
+			})
+			.catch((err) => {
+				this.logger.error('Error sending reset password email:', err);
+			});
+	}
+
+	async verifyResetCode({ userId, code }: { userId: string; code: string }) {
+		const verification = this.getVerificationCode(userId);
+
+		if (!verification || verification.code !== code) {
+			throw new ResponseError({ message: 'Invalid verification code' });
+		}
+
+		this.verificationCodes.delete(userId);
+
+		return await this.genarateResetToken(userId);
+	}
+
+	async resetPassword(dto: ResetPasswordDto) {
+		const { token, newPassword } = dto;
+
+		const { userId } = this.jwtService.verify(token);
 		const hashed = await bcrypt.hash(newPassword, 10);
 
-		await this.usersService.update(record.userId, { password: hashed });
+		const user = await this.usersService.update(userId, {
+			password: hashed,
+		});
 
-		this.resetTokens.delete(token);
-
-		return { message: 'Password reset successful' };
+		return user;
 	}
 
 	private generateTokens(input: Omit<IAuthPayload, 'type'>) {
@@ -132,6 +163,14 @@ export class AuthService {
 		);
 	}
 
+	private genarateResetToken(userId: string) {
+		return this.jwtService.sign(
+			{ userId, type: TypeToken.RESET_PASSWORD },
+			{ expiresIn: '15m' },
+		);
+	}
+
+	// code verification
 	private createVerificationCode(userId: string) {
 		const verification: IVerificationCode = {
 			userId,

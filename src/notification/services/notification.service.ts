@@ -28,4 +28,24 @@ export class NotificationService {
 			html,
 		});
 	}
+
+	async sendEmailResetPassword({
+		recipientId,
+		code,
+	}: {
+		recipientId: string;
+		code: string;
+	}) {
+		const recipient =
+			await this.notificationHelperService.getUser(recipientId);
+
+		const { subject, html } =
+			this.notificationHelperService.getResetPasswordTemplate(code);
+
+		await this.emailProvider.sendMail({
+			to: recipient.email,
+			subject,
+			html,
+		});
+	}
 }
