@@ -1,11 +1,19 @@
 // src/permissions/dto/permission.dto.ts
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
+import { PermissionAction } from '../enums/permission.enum';
 
 export class CreatePermissionDto {
 	@IsNotEmpty()
-	action: string;
+	name: string;
+
+	@IsOptional()
+	description?: string;
+
+	@IsNotEmpty()
+	@IsEnum(PermissionAction)
+	action: PermissionAction;
 
 	@IsNotEmpty()
 	resource: string;
