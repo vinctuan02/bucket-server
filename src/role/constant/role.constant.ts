@@ -1,3 +1,5 @@
+import { RoleFM } from './orm.role.fm';
+
 // src/roles/constant/role.constant.ts
 export const RoleResponse = {
 	NOT_FOUND: {
@@ -7,3 +9,5 @@ export const RoleResponse = {
 		message: 'Role already exists',
 	},
 };
+
+export const RoleFieldSimple = [RoleFM.ID, RoleFM.NAME, RoleFM.DESCRIPTION];

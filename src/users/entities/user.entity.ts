@@ -19,12 +19,4 @@ export class User extends BaseUserUUIDEntity {
 
 	@OneToMany(() => UserRole, (userRole) => userRole.user)
 	userRoles: UserRole[];
-
-	// @ManyToOne(() => User)
-	// @JoinColumn({ name: 'creator_id' })
-	// creator: User;
-
-	// @ManyToOne(() => User)
-	// @JoinColumn({ name: 'modifier_id' })
-	// modifier: User;
 }

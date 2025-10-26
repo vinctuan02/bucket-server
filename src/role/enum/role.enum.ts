@@ -1,8 +1,8 @@
-import { RoleFieldMapping } from 'src/orm-utils/field-mapping/orm.role.fm';
+import { RoleFM } from 'src/role/constant/orm.role.fm';
 
 export enum RoleFieldOrder {
-	NAME = RoleFieldMapping.NAME,
-	DESCRIPTION = RoleFieldMapping.DESCRIPTION,
-	CREATE_AT = RoleFieldMapping.CREATED_AT,
-	UPDATE_AT = RoleFieldMapping.UPDATED_AT,
+	NAME = RoleFM.NAME,
+	DESCRIPTION = RoleFM.DESCRIPTION,
+	CREATE_AT = RoleFM.CREATED_AT,
+	UPDATE_AT = RoleFM.UPDATED_AT,
 }

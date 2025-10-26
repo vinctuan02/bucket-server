@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { UserFM } from 'src/users/enum/user.enum';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
+import { RoleFM } from '../../role/constant/orm.role.fm';
 import { OrmFilterDto } from '../dto/orm-utils.dto';
 import { PermissionFieldMapping } from '../field-mapping/orm.permission.fm';
-import { RoleFieldMapping } from '../field-mapping/orm.role.fm';
 
 @Injectable()
 export class OrmUtilsWhere {
@@ -14,6 +15,7 @@ export class OrmUtilsWhere {
 		filter: OrmFilterDto;
 	}) {
 		const {
+			keywordsUser,
 			keywordsPermission,
 			keywordsRole,
 			pageSize,
@@ -24,8 +26,46 @@ export class OrmUtilsWhere {
 
 		qb.orderBy(fieldOrder, orderBy).take(pageSize).skip(skip);
 
+		this.andWhereKeywordsUser({ qb, keywords: keywordsUser });
 		this.andWhereKeywordsPermission({ qb, keywords: keywordsPermission });
 		this.andWhereKeywordsRole({ qb, keywords: keywordsRole });
+	}
+
+	andWhereKeywordsUser({
+		qb,
+		keywords,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		keywords?: string[];
+	}) {
+		if (keywords && keywords.length > 0) {
+			qb.andWhere(
+				new Brackets((subQb) => {
+					keywords.forEach((keyword, index) => {
+						const trimmed = keyword.trim();
+						if (!trimmed) return;
+
+						const paramName = `kw${index}`;
+						const paramValue = `%${trimmed}%`;
+
+						const condition = `
+                            (${UserFM.NAME} ILIKE :${paramName})
+                            OR (${UserFM.EMAIL} ILIKE :${paramName})
+                        `;
+
+						if (index === 0) {
+							subQb.where(condition, { [paramName]: paramValue });
+						} else {
+							subQb.orWhere(condition, {
+								[paramName]: paramValue,
+							});
+						}
+					});
+				}),
+			);
+		}
+
+		return qb;
 	}
 
 	andWhereKeywordsPermission({
@@ -46,10 +86,10 @@ export class OrmUtilsWhere {
 						const paramValue = `%${trimmed}%`;
 
 						const condition = `
-                            (${PermissionFieldMapping.name} ILIKE :${paramName})
-                            OR (${PermissionFieldMapping.description} ILIKE :${paramName})
-                            OR (CAST(${PermissionFieldMapping.description} AS TEXT) ILIKE :${paramName})
-                            OR (${PermissionFieldMapping.resouce} ILIKE :${paramName})
+                            (${PermissionFieldMapping.NAME} ILIKE :${paramName})
+                            OR (${PermissionFieldMapping.RESOURCE} ILIKE :${paramName})
+                            OR (CAST(${PermissionFieldMapping.DESCRIPTION} AS TEXT) ILIKE :${paramName})
+                            OR (${PermissionFieldMapping.ACTION} ILIKE :${paramName})
                         `;
 
 						if (index === 0) {
@@ -85,8 +125,8 @@ export class OrmUtilsWhere {
 						const paramValue = `%${trimmed}%`;
 
 						const condition = `
-                            (${RoleFieldMapping.NAME} ILIKE :${paramName})
-                            OR (CAST(${RoleFieldMapping.DESCRIPTION} AS TEXT) ILIKE :${paramName})
+                            (${RoleFM.NAME} ILIKE :${paramName})
+                            OR (CAST(${RoleFM.DESCRIPTION} AS TEXT) ILIKE :${paramName})
                         `;
 
 						if (index === 0) {

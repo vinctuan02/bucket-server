@@ -28,4 +28,8 @@ export class RolePermissionService {
 		const entity = this.rolePermissionRepo.create({ roleId, permissionId });
 		return await this.rolePermissionRepo.save(entity);
 	}
+
+	async deleteByRoleId(roleId: string) {
+		await this.rolePermissionRepo.delete({ roleId });
+	}
 }

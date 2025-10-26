@@ -68,9 +68,27 @@ export class RolesService {
 	}
 
 	async update(id: string, dto: UpdateRoleDto) {
+		const { rolePermissions, ...rest } = dto;
+
 		const entity = await this.findOne(id);
-		Object.assign(entity, dto);
-		return this.roleRepo.save(entity);
+
+		Object.assign(entity, rest);
+		await this.roleRepo.save(entity);
+
+		await this.rolePermissionService.deleteByRoleId(id);
+
+		if (rolePermissions?.length) {
+			await Promise.all(
+				rolePermissions.map((item) =>
+					this.rolePermissionService.createSafe({
+						permissionId: item.permissionId,
+						roleId: id,
+					}),
+				),
+			);
+		}
+
+		return await this.findOneWithPermissions(id);
 	}
 
 	async remove(id: string) {

@@ -1,4 +1,7 @@
 export const Alias = {
-	PERMISSION: 'permission',
+	USER: 'user',
+	USER_ROLE: 'userRole',
 	ROLE: 'role',
+	ROLE_PERMISSION: 'rolePermission',
+	PERMISSION: 'permission',
 };

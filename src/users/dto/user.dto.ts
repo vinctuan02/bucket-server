@@ -1,6 +1,13 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsEmail, IsNotEmpty, IsOptional, MinLength } from 'class-validator';
+import {
+	IsEmail,
+	IsEnum,
+	IsNotEmpty,
+	IsOptional,
+	MinLength,
+} from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
+import { UserFieldOrder } from '../enum/user.enum';
 
 export class CreateUserDto {
 	@IsEmail()
@@ -21,4 +28,8 @@ export class CreateUserDto {
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
-export class GetListUserDto extends BaseQueryDto {}
+export class GetListUserDto extends BaseQueryDto {
+	@IsOptional()
+	@IsEnum(UserFieldOrder)
+	fieldOrder: UserFieldOrder = UserFieldOrder.NAME;
+}

@@ -1,0 +1,20 @@
+export enum UserFM {
+	ID = 'user.id',
+	NAME = 'user.name',
+	EMAIL = 'user.email',
+	PASSWORD = 'user.password',
+	IS_ACTIVE = 'user.isActive',
+
+	USER_ROLES = 'user.userRoles',
+	CREATED_AT = 'user.createdAt',
+	UPDATED_AT = 'user.updatedAt',
+}
+
+export enum UserFieldOrder {
+	ID = UserFM.ID,
+	NAME = UserFM.NAME,
+	EMAIL = UserFM.EMAIL,
+	IS_ACTIVE = UserFM.IS_ACTIVE,
+	CREATED_AT = UserFM.CREATED_AT,
+	UPDATED_AT = UserFM.UPDATED_AT,
+}

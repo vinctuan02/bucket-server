@@ -1,9 +1,9 @@
-export const PermissionFieldMapping = {
-	id: 'permission.id',
-	name: 'permission.name',
-	resouce: 'permission.resource',
-	description: 'permission.description',
-	action: 'permission.action',
-	createdAt: 'permission.createdAt',
-	updatedAt: 'permission.updatedAt',
-};
+export enum PermissionFieldMapping {
+	ID = 'permission.id',
+	NAME = 'permission.name',
+	RESOURCE = 'permission.resource',
+	DESCRIPTION = 'permission.description',
+	ACTION = 'permission.action',
+	CREATED_AT = 'permission.createdAt',
+	UPDATED_AT = 'permission.updatedAt',
+}

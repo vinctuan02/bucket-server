@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'src/permission/entities/permission.entity';
 import { Role } from 'src/role/entities/role.entity';
+import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Alias } from './orm-utils.alias';
 
@@ -13,6 +14,9 @@ export class OrmUtilsCreateQb {
 
 		@InjectRepository(Role)
 		private readonly roleRepo: Repository<Role>,
+
+		@InjectRepository(User)
+		private readonly userRepo: Repository<User>,
 	) {}
 
 	createPermissionQb(alias?: string) {
@@ -23,5 +27,9 @@ export class OrmUtilsCreateQb {
 
 	createRoleQb(alias?: string) {
 		return this.roleRepo.createQueryBuilder(alias ?? Alias.ROLE);
+	}
+
+	createUserQb(alias?: string) {
+		return this.userRepo.createQueryBuilder(alias ?? Alias.USER);
 	}
 }

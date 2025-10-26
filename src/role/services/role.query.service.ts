@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
+import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
+import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { RoleResponse } from '../constant/role.constant';
@@ -17,7 +19,9 @@ export class RoleQueryService {
 		private readonly roleRepo: Repository<Role>,
 
 		private readonly ormUtilsCreateQb: OrmUtilsCreateQb,
+		private readonly ormUtilsJoin: OrmUtilsJoin,
 		private readonly ormUtilsWhere: OrmUtilsWhere,
+		private readonly ormUtilsSelect: OrmUtilsSelect,
 	) {}
 
 	async create(dto: Partial<Role>) {
@@ -29,6 +33,7 @@ export class RoleQueryService {
 		const { keywords } = query;
 
 		const qb = this.ormUtilsCreateQb.createRoleQb();
+		this.ormUtilsJoin.leftJoinRoleWithPermissions(qb);
 
 		const ormFilter = new OrmFilterDto({
 			keywordsRole: keywords,
@@ -36,6 +41,9 @@ export class RoleQueryService {
 		});
 
 		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilter });
+
+		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);
+		this.ormUtilsSelect.addSelectPermissionSimple(qb);
 
 		const [items, totalItems] = await qb.getManyAndCount();
 		return { items, totalItems };

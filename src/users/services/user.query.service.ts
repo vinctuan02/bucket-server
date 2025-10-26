@@ -2,6 +2,11 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
+import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
+import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
+import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
+import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
+import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { Repository } from 'typeorm';
 import { SelectQueryBuilder } from 'typeorm/browser';
 import { UserResponse } from '../constant/user.constant';
@@ -18,6 +23,11 @@ export class UserQueryService implements OnModuleInit {
 		private readonly userRepo: Repository<User>,
 
 		private readonly configService: ConfigService,
+
+		private readonly ormUtilsCreateQb: OrmUtilsCreateQb,
+		private readonly ormUtilsJoin: OrmUtilsJoin,
+		private readonly ormUtilsWhere: OrmUtilsWhere,
+		private readonly ormUtilsSelect: OrmUtilsSelect,
 	) {}
 
 	async onModuleInit() {
@@ -34,8 +44,25 @@ export class UserQueryService implements OnModuleInit {
 	}
 
 	async getList(query: GetListUserDto) {
-		const qb = this.createBaseQuery();
-		this.implementFilter(query, qb);
+		const { keywords } = query;
+
+		const qb = this.ormUtilsCreateQb.createUserQb();
+
+		this.ormUtilsJoin.leftJoinUserWithRoles(qb);
+		this.ormUtilsJoin.leftJoinRoleWithPermissions(qb);
+
+		const ormFilterDto = new OrmFilterDto({
+			keywordsUser: keywords,
+			...query,
+		});
+
+		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilterDto });
+
+		this.ormUtilsSelect.addSelectUserRoleSimple(qb);
+		this.ormUtilsSelect.addSelectRoleSimple(qb);
+		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);
+		this.ormUtilsSelect.addSelectPermissionSimple(qb);
+
 		const [items, totalItems] = await qb.getManyAndCount();
 		return { items, totalItems };
 	}
