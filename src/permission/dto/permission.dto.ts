@@ -2,6 +2,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
+import { PermissionFieldMapping } from '../entities/permission.field-mapping';
 import { PermissionAction } from '../enums/permission.enum';
 
 export class CreatePermissionDto {
@@ -21,4 +22,8 @@ export class CreatePermissionDto {
 
 export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {}
 
-export class GetListPermissionDto extends BaseQueryDto {}
+export class GetListPermissionDto extends BaseQueryDto {
+	@IsOptional()
+	@IsEnum(PermissionFieldMapping)
+	fieldOrder: PermissionFieldMapping = PermissionFieldMapping.NAME;
+}

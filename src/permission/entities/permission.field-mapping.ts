@@ -1,14 +1,4 @@
-export enum PermissionAction {
-	VIEW = 'view',
-	CREATE = 'create',
-	UPDATE = 'update',
-	DELETE = 'delete',
-	APPROVE = 'approve',
-	EXPORT = 'export',
-	MANAGE = 'manage',
-}
-
-export enum PermissionFieldOrder {
+export enum PermissionFieldMapping {
 	NAME = 'permission.name',
 	ACTION = 'permission.action',
 	RESOURCE = 'permission.resource',

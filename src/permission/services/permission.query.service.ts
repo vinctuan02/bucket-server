@@ -31,9 +31,10 @@ export class PermissionQueryService {
 
 		const qb = this.ormUtilsCreateQb.createPermissionQb();
 
-		const ormFilter: OrmFilterDto = {
+		const ormFilter = new OrmFilterDto({
 			keywordsPermission: keywords,
-		};
+			...query,
+		});
 
 		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilter });
 
