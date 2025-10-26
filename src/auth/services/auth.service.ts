@@ -86,15 +86,16 @@ export class AuthService {
 			),
 		);
 
-		const payload = {
+		const accessToken = this.generateAccessToken({
 			sub: user.id,
 			email: user.email,
 			roles,
 			permissions,
-		};
-
-		const accessToken = this.generateAccessToken(payload);
-		const refreshToken = this.generateRefreshToken(payload);
+		});
+		const refreshToken = this.generateRefreshToken({
+			sub: user.id,
+			email: user.email,
+		});
 
 		return { accessToken, refreshToken };
 	}
