@@ -1,5 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import {
+	IsBoolean,
 	IsEmail,
 	IsEnum,
 	IsNotEmpty,
@@ -26,7 +27,11 @@ export class CreateUserDto {
 	}[] = [];
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
+export class UpdateUserDto extends PartialType(CreateUserDto) {
+	@IsOptional()
+	@IsBoolean()
+	isActive?: boolean;
+}
 
 export class GetListUserDto extends BaseQueryDto {
 	@IsOptional()

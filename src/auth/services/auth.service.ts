@@ -74,12 +74,29 @@ export class AuthService {
 	async login(dto: LoginDto): Promise<IAuthToken> {
 		const user = await this.authValidateService.validateLogin(dto);
 
+		const roles = user.userRoles.map((ul) => ul.role.name);
+		const permissions = Array.from(
+			new Set(
+				user.userRoles.flatMap((ul) =>
+					ul.role.rolePermissions.map(
+						(rp) =>
+							rp.permission.action + ':' + rp.permission.resource,
+					),
+				),
+			),
+		);
+
 		const payload = {
 			sub: user.id,
 			email: user.email,
-			// role: user.role,
+			roles,
+			permissions,
 		};
-		return this.generateTokens(payload);
+
+		const accessToken = this.generateAccessToken(payload);
+		const refreshToken = this.generateRefreshToken(payload);
+
+		return { accessToken, refreshToken };
 	}
 
 	refreshTokens(dto: RefreshTokenDto) {

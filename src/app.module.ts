@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/guard/auth.guard';
 import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
 import { validationSchema } from './common/config/common.validate-env';
@@ -37,6 +39,12 @@ import { UsersModule } from './users/user.module';
 		RolePermissionModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [
+		AppService,
+		{
+			provide: APP_GUARD,
+			useClass: JwtAuthGuard,
+		},
+	],
 })
 export class AppModule {}

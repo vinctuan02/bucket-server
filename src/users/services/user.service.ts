@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PageDto } from 'src/common/dto/common.response-dto';
+import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
+import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
+import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
+import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserRoleService } from 'src/user-role/services/user-role.service';
 import { Repository } from 'typeorm';
 import { CreateUserDto, GetListUserDto, UpdateUserDto } from '../dto/user.dto';
@@ -16,6 +20,11 @@ export class UsersService {
 
 		private readonly userQueryService: UserQueryService,
 		private readonly userRolesService: UserRoleService,
+
+		private readonly ormUtilsCreateQb: OrmUtilsCreateQb,
+		private readonly ormUtilsJoin: OrmUtilsJoin,
+		private readonly ormUtilsWhere: OrmUtilsWhere,
+		private readonly ormUtilsSelect: OrmUtilsSelect,
 	) {}
 
 	async handleCreate(dto: CreateUserDto) {
@@ -66,18 +75,18 @@ export class UsersService {
 	}
 
 	async findOneWithPermissions(id: string) {
-		const user = await this.userRepo.findOne({
-			where: { id },
-			relations: {
-				userRoles: {
-					role: {
-						rolePermissions: {
-							permission: true,
-						},
-					},
-				},
-			},
-		});
+		const qb = this.ormUtilsCreateQb.createUserQb();
+		this.ormUtilsJoin.leftJoinUserWithRoles(qb);
+		this.ormUtilsJoin.leftJoinRoleWithPermissions(qb);
+
+		this.ormUtilsSelect.addSelectUserRoleSimple(qb);
+		this.ormUtilsSelect.addSelectRoleSimple(qb);
+		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);
+		this.ormUtilsSelect.addSelectPermissionSimple(qb);
+
+		this.ormUtilsWhere.andWhereUserId({ qb, userId: id });
+
+		const user = await qb.getOne();
 
 		if (!user) throw new NotFoundException(`User ${id} not found`);
 
@@ -89,9 +98,30 @@ export class UsersService {
 	}
 
 	async update(id: string, dto: UpdateUserDto): Promise<User> {
+		const { userRoles, ...rest } = dto;
+
+		rest.password = rest.password
+			? await hashPass(rest.password)
+			: rest.password;
+
 		const user = await this.findOne(id);
-		Object.assign(user, dto);
-		return this.userRepo.save(user);
+		Object.assign(user, rest);
+
+		await this.userRepo.save(user);
+		await this.userRolesService.deleteByUserId(user.id);
+
+		if (userRoles?.length) {
+			await Promise.all(
+				userRoles.map((item) =>
+					this.userRolesService.createSafe({
+						roleId: item.roleId,
+						userId: user.id,
+					}),
+				),
+			);
+		}
+
+		return await this.findOneWithPermissions(user.id);
 	}
 
 	async remove(id: string): Promise<void> {

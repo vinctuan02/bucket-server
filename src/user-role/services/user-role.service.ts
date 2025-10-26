@@ -22,4 +22,8 @@ export class UserRoleService {
 		const entity = this.userRoleRepo.create(input);
 		return await this.userRoleRepo.save(entity);
 	}
+
+	async deleteByUserId(userId: string) {
+		await this.userRoleRepo.delete({ userId });
+	}
 }

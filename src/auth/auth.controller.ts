@@ -1,6 +1,7 @@
 // src/auth/auth.controller.ts
 import { Body, Controller, Post } from '@nestjs/common';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
+import { Public } from './decorator/auth.decorator';
 import {
 	ForgotPasswordDto,
 	LoginDto,
@@ -16,12 +17,14 @@ import { AuthService } from './services/auth.service';
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
+	@Public()
 	@Post('register')
 	async register(@Body() dto: RegisterDto) {
 		const data = await this.authService.register(dto);
 		return new ResponseSuccess({ data });
 	}
 
+	@Public()
 	@Post('verify-email')
 	async verify(@Body() body: VerifyAccountDto) {
 		const data = await this.authService.verifyAccount(body);
@@ -31,24 +34,28 @@ export class AuthController {
 		});
 	}
 
+	@Public()
 	@Post('login')
 	async login(@Body() dto: LoginDto) {
 		const data = await this.authService.login(dto);
 		return new ResponseSuccess({ data });
 	}
 
+	@Public()
 	@Post('refresh-token')
 	async refreshTokens(@Body() dto: RefreshTokenDto) {
 		const data = this.authService.refreshTokens(dto);
 		return new ResponseSuccess({ data });
 	}
 
+	@Public()
 	@Post('forgot-password')
 	async forgotPassword(@Body() dto: ForgotPasswordDto) {
 		await this.authService.forgotPassword(dto.email);
 		return new ResponseSuccess({ message: 'Reset code sent to email' });
 	}
 
+	@Public()
 	@Post('verify-reset-code')
 	async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
 		const data = await this.authService.verifyResetCode(dto);
@@ -58,6 +65,7 @@ export class AuthController {
 		});
 	}
 
+	@Public()
 	@Post('reset-password')
 	async resetPassword(@Body() dto: ResetPasswordDto) {
 		await this.authService.resetPassword(dto);

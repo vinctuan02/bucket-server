@@ -33,6 +33,6 @@ export class AuthValidateService {
 		if (!isMatch)
 			throw new ResponseError({ message: 'Invalid credentials' });
 
-		return user;
+		return await this.userService.findOneWithPermissions(user.id);
 	}
 }

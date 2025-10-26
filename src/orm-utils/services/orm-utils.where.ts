@@ -143,4 +143,18 @@ export class OrmUtilsWhere {
 
 		return qb;
 	}
+
+	andWhereUserId({
+		userId,
+		qb,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		userId?: string;
+	}) {
+		if (userId) {
+			qb.andWhere(`${UserFM.ID} = :userId`, {
+				userId,
+			});
+		}
+	}
 }

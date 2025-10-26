@@ -8,8 +8,9 @@ export interface IAuthToken {
 export interface IAuthPayload {
 	sub: string;
 	email: string;
+	roles?: string[];
+	permissions?: string[];
 	type: TypeToken;
-	// role: string;
 }
 
 export interface IVerificationCode {
