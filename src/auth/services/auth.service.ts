@@ -132,7 +132,7 @@ export class AuthService {
 			});
 	}
 
-	async verifyResetCode({ userId, code }: { userId: string; code: string }) {
+	verifyResetCode({ userId, code }: { userId: string; code: string }) {
 		const verification = this.getVerificationCode(userId);
 
 		if (!verification || verification.code !== code) {
@@ -141,7 +141,7 @@ export class AuthService {
 
 		this.verificationCodes.delete(userId);
 
-		return await this.genarateResetToken(userId);
+		return this.genarateResetToken(userId);
 	}
 
 	async resetPassword(dto: ResetPasswordDto) {

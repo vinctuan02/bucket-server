@@ -8,11 +8,21 @@ export enum PermissionAction {
 	MANAGE = 'manage',
 }
 
-export enum PermissionFieldOrder {
+export enum PermissionFM {
+	ID = 'permission.id',
 	NAME = 'permission.name',
 	ACTION = 'permission.action',
 	RESOURCE = 'permission.resource',
 	DESCRIPTION = 'permission.description',
 	CREATED_AT = 'permission.createdAt',
 	UPDATED_AT = 'permission.updatedAt',
+}
+
+export enum PermissionFieldOrder {
+	NAME = PermissionFM.NAME,
+	ACTION = PermissionFM.ACTION,
+	RESOURCE = PermissionFM.RESOURCE,
+	DESCRIPTION = PermissionFM.DESCRIPTION,
+	CREATED_AT = PermissionFM.CREATED_AT,
+	UPDATED_AT = PermissionFM.UPDATED_AT,
 }

@@ -1,4 +1,4 @@
-import { PermissionFieldMapping } from 'src/orm-utils/field-mapping/orm.permission.fm';
+import { PermissionFM } from '../enums/permission.enum';
 
 // src/permissions/constant/permission.constant.ts
 export const PermissionResponse = {
@@ -11,11 +11,11 @@ export const PermissionResponse = {
 };
 
 export const PermissionFieldsSimple = [
-	PermissionFieldMapping.ID,
-	PermissionFieldMapping.NAME,
-	PermissionFieldMapping.RESOURCE,
-	PermissionFieldMapping.DESCRIPTION,
-	PermissionFieldMapping.ACTION,
-	PermissionFieldMapping.CREATED_AT,
-	PermissionFieldMapping.UPDATED_AT,
+	PermissionFM.ID,
+	PermissionFM.NAME,
+	PermissionFM.RESOURCE,
+	PermissionFM.DESCRIPTION,
+	PermissionFM.ACTION,
+	PermissionFM.CREATED_AT,
+	PermissionFM.UPDATED_AT,
 ];

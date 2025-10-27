@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { PermissionFM } from 'src/permission/enums/permission.enum';
 import { UserFM } from 'src/users/enum/user.enum';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
 import { RoleFM } from '../../role/constant/orm.role.fm';
 import { OrmFilterDto } from '../dto/orm-utils.dto';
-import { PermissionFieldMapping } from '../field-mapping/orm.permission.fm';
 
 @Injectable()
 export class OrmUtilsWhere {
@@ -86,10 +86,10 @@ export class OrmUtilsWhere {
 						const paramValue = `%${trimmed}%`;
 
 						const condition = `
-                            (${PermissionFieldMapping.NAME} ILIKE :${paramName})
-                            OR (${PermissionFieldMapping.RESOURCE} ILIKE :${paramName})
-                            OR (CAST(${PermissionFieldMapping.DESCRIPTION} AS TEXT) ILIKE :${paramName})
-                            OR (${PermissionFieldMapping.ACTION} ILIKE :${paramName})
+                            (${PermissionFM.NAME} ILIKE :${paramName})
+                            OR (${PermissionFM.RESOURCE} ILIKE :${paramName})
+                            OR (CAST(${PermissionFM.DESCRIPTION} AS TEXT) ILIKE :${paramName})
+                            OR (${PermissionFM.ACTION} ILIKE :${paramName})
                         `;
 
 						if (index === 0) {

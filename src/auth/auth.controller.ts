@@ -43,7 +43,7 @@ export class AuthController {
 
 	@Public()
 	@Post('refresh-token')
-	async refreshTokens(@Body() dto: RefreshTokenDto) {
+	refreshTokens(@Body() dto: RefreshTokenDto) {
 		const data = this.authService.refreshTokens(dto);
 		return new ResponseSuccess({ data });
 	}
