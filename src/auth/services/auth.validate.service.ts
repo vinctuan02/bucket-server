@@ -28,7 +28,7 @@ export class AuthValidateService {
 
 	async validateLogin({ email, password }: LoginDto) {
 		const user = await this.ensureEmailExists(email);
-		const isMatch = await comparePass(password, user.password);
+		const isMatch = await comparePass(password, user?.password ?? '');
 
 		if (!isMatch)
 			throw new ResponseError({ message: 'Invalid credentials' });

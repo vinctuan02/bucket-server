@@ -33,6 +33,27 @@ export class AuthService {
 		private readonly notificationService: NotificationService,
 	) {}
 
+	// google
+	async validateGoogleUser(googleUser: any) {
+		const { email, name, providerId } = googleUser;
+
+		let user = await this.usersService.findByEmail(email);
+
+		if (!user) {
+			user = await this.usersService.create({
+				name,
+				email,
+				password: null,
+				isActive: true,
+				provider: 'google',
+				providerId,
+				// avatar,
+			});
+		}
+
+		return this.generateTokens({ sub: user.id, email: user.email });
+	}
+
 	async register(dto: RegisterDto) {
 		const newUser = await this.usersService.create(dto);
 		const { code } = this.createVerificationCode(newUser.id);

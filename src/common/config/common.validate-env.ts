@@ -16,4 +16,8 @@ export const validationSchema = Joi.object({
 	EMAIL_SERVICE: Joi.string().required(),
 	EMAIL_USER: Joi.string().email().required(),
 	EMAIL_PASS: Joi.string().required(),
+
+	GOOGLE_CLIENT_ID: Joi.string().required(),
+	GOOGLE_CLIENT_SECRET: Joi.string().required(),
+	CALLBACK_URL: Joi.string().required(),
 });

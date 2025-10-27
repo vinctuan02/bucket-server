@@ -14,8 +14,14 @@ export class User extends BaseUserUUIDEntity {
 	@Column({ unique: true })
 	email: string;
 
-	@Column()
-	password: string;
+	@Column({ type: 'varchar', nullable: true })
+	password: string | null;
+
+	@Column({ type: 'varchar', nullable: true })
+	provider: string | null;
+
+	@Column({ type: 'varchar', nullable: true })
+	providerId: string | null;
 
 	@OneToMany(() => UserRole, (userRole) => userRole.user)
 	userRoles: UserRole[];

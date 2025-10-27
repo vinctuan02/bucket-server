@@ -7,7 +7,7 @@ import { UsersModule } from 'src/users/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './services/auth.service';
 import { AuthValidateService } from './services/auth.validate.service';
-import { JwtStrategy } from './strategy/auth.strategy';
+import { GoogleStrategy, JwtStrategy } from './strategy/auth.strategy';
 
 @Module({
 	imports: [
@@ -15,7 +15,7 @@ import { JwtStrategy } from './strategy/auth.strategy';
 		JwtModule.registerAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: async (config: ConfigService) => ({
+			useFactory: (config: ConfigService) => ({
 				secret: config.get<string>('JWT_SECRET'),
 				signOptions: { expiresIn: '1d' },
 			}),
@@ -23,7 +23,7 @@ import { JwtStrategy } from './strategy/auth.strategy';
 		NotificationModule,
 	],
 	controllers: [AuthController],
-	providers: [AuthService, AuthValidateService, JwtStrategy],
+	providers: [AuthService, AuthValidateService, JwtStrategy, GoogleStrategy],
 	exports: [AuthService],
 })
 export class AuthModule {}

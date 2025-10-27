@@ -14,9 +14,19 @@ export class CreateUserDto {
 	@IsEmail()
 	email: string;
 
-	@IsNotEmpty()
+	@IsOptional()
 	@MinLength(6)
-	password: string;
+	password?: string | null;
+
+	@IsOptional()
+	provider?: string | null;
+
+	@IsOptional()
+	providerId?: string | null;
+
+	@IsOptional()
+	@IsBoolean()
+	isActive?: boolean;
 
 	@IsNotEmpty()
 	name: string;
@@ -27,11 +37,7 @@ export class CreateUserDto {
 	}[] = [];
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
-	@IsOptional()
-	@IsBoolean()
-	isActive?: boolean;
-}
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
 export class GetListUserDto extends BaseQueryDto {
 	@IsOptional()

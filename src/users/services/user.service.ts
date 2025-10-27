@@ -46,7 +46,7 @@ export class UsersService {
 	async create(input: Omit<CreateUserDto, 'userRoles'>): Promise<User> {
 		const { password, email } = input;
 		await this.userQueryService.ensureEmailNotExists(email);
-		input.password = await hashPass(password);
+		input.password = password ? await hashPass(password) : null;
 		return await this.userQueryService.create(input);
 	}
 

@@ -1,5 +1,6 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import { Public } from './decorator/auth.decorator';
 import {
@@ -17,6 +18,21 @@ import { AuthService } from './services/auth.service';
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
+	// google
+	@Public()
+	@Get('google')
+	@UseGuards(AuthGuard('google'))
+	async googleAuth() {}
+
+	@Public()
+	@Get('google/redirect')
+	@UseGuards(AuthGuard('google'))
+	async googleRedirect(@Req() req) {
+		const data = await this.authService.validateGoogleUser(req.user);
+		return new ResponseSuccess({ data });
+	}
+
+	//
 	@Public()
 	@Post('register')
 	async register(@Body() dto: RegisterDto) {
@@ -57,8 +73,8 @@ export class AuthController {
 
 	@Public()
 	@Post('verify-reset-code')
-	async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
-		const data = await this.authService.verifyResetCode(dto);
+	verifyResetCode(@Body() dto: VerifyResetCodeDto) {
+		const data = this.authService.verifyResetCode(dto);
 		return new ResponseSuccess({
 			message: 'Code verified successfully',
 			data,
