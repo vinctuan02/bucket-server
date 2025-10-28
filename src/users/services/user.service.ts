@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PageDto } from 'src/common/dto/common.response-dto';
-import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
-import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
-import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
-import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserRoleService } from 'src/user-role/services/user-role.service';
 import { Repository } from 'typeorm';
 import { CreateUserDto, GetListUserDto, UpdateUserDto } from '../dto/user.dto';
@@ -20,11 +16,6 @@ export class UsersService {
 
 		private readonly userQueryService: UserQueryService,
 		private readonly userRolesService: UserRoleService,
-
-		private readonly ormUtilsCreateQb: OrmUtilsCreateQb,
-		private readonly ormUtilsJoin: OrmUtilsJoin,
-		private readonly ormUtilsWhere: OrmUtilsWhere,
-		private readonly ormUtilsSelect: OrmUtilsSelect,
 	) {}
 
 	async handleCreate(dto: CreateUserDto) {
@@ -75,22 +66,7 @@ export class UsersService {
 	}
 
 	async findOneWithPermissions(id: string) {
-		const qb = this.ormUtilsCreateQb.createUserQb();
-		this.ormUtilsJoin.leftJoinUserWithRoles(qb);
-		this.ormUtilsJoin.leftJoinRoleWithPermissions(qb);
-
-		this.ormUtilsSelect.addSelectUserRoleSimple(qb);
-		this.ormUtilsSelect.addSelectRoleSimple(qb);
-		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);
-		this.ormUtilsSelect.addSelectPermissionSimple(qb);
-
-		this.ormUtilsWhere.andWhereUserId({ qb, userId: id });
-
-		const user = await qb.getOne();
-
-		if (!user) throw new NotFoundException(`User ${id} not found`);
-
-		return user;
+		return await this.userQueryService.findOneWithPermissions(id);
 	}
 
 	async findByEmail(email: string) {

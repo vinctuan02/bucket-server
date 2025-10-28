@@ -1,4 +1,4 @@
-import { enumToArray } from 'src/common/util/common.util';
+import { getValuesOfEnum } from 'src/common/util/common.util';
 import { UserFM } from '../enum/user.enum';
 
 export const UserResponse = {
@@ -15,5 +15,5 @@ export const UserResponse = {
 	},
 };
 
-export const UserFilesAll = enumToArray(UserFM);
-export const UserFieldsSimple = [UserFM.ID, UserFM.NAME, UserFM.EMAIL];
+export const USER_FIELDS_ALL = getValuesOfEnum(UserFM);
+export const USER_FIELDS_SIMPLE = [UserFM.ID, UserFM.NAME, UserFM.EMAIL];

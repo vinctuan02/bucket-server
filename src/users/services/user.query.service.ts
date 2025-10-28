@@ -8,8 +8,7 @@ import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { Repository } from 'typeorm';
-import { SelectQueryBuilder } from 'typeorm/browser';
-import { UserFieldsSimple, UserResponse } from '../constant/user.constant';
+import { USER_FIELDS_SIMPLE, UserResponse } from '../constant/user.constant';
 import { GetListUserDto } from '../dto/user.dto';
 import { User } from '../entities/user.entity';
 import { ICreateUser } from '../interface/user.interface';
@@ -43,6 +42,25 @@ export class UserQueryService implements OnModuleInit {
 		return await this.userRepo.save(user);
 	}
 
+	async findOneWithPermissions(id: string) {
+		const qb = this.ormUtilsCreateQb.createUserQb();
+		this.ormUtilsJoin.leftJoinUserWithRoles(qb);
+		this.ormUtilsJoin.leftJoinRoleWithPermissions(qb);
+
+		this.ormUtilsSelect.addSelectUserRoleSimple(qb);
+		this.ormUtilsSelect.addSelectRoleSimple(qb);
+		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);
+		this.ormUtilsSelect.addSelectPermissionSimple(qb);
+
+		this.ormUtilsWhere.andWhereUserId({ qb, userId: id });
+
+		const user = await qb.getOne();
+
+		if (!user) throw new ResponseError({ message: `User ${id} not found` });
+
+		return user;
+	}
+
 	async getList(query: GetListUserDto) {
 		const { keywords } = query;
 
@@ -58,7 +76,7 @@ export class UserQueryService implements OnModuleInit {
 
 		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilterDto });
 
-		this.ormUtilsSelect.addSelectUser({ qb, fields: UserFieldsSimple });
+		this.ormUtilsSelect.selectUser({ qb, fields: USER_FIELDS_SIMPLE });
 		this.ormUtilsSelect.addSelectUserRoleSimple(qb);
 		this.ormUtilsSelect.addSelectRoleSimple(qb);
 		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);
@@ -85,17 +103,6 @@ export class UserQueryService implements OnModuleInit {
 	}
 
 	// private
-	private createBaseQuery() {
-		return this.userRepo.createQueryBuilder('user');
-	}
-
-	private implementFilter(
-		query: GetListUserDto,
-		qb: SelectQueryBuilder<User>,
-	) {
-		return qb;
-	}
-
 	private async initUser() {
 		const count = await this.userRepo.count();
 

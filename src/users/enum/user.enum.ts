@@ -5,9 +5,12 @@ export enum UserFM {
 	PASSWORD = 'user.password',
 	IS_ACTIVE = 'user.isActive',
 
-	USER_ROLES = 'user.userRoles',
 	CREATED_AT = 'user.createdAt',
 	UPDATED_AT = 'user.updatedAt',
+}
+
+export enum UserFMR {
+	USER_ROLES = 'user.userRoles',
 }
 
 export enum UserFieldOrder {
