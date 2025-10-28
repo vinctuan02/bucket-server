@@ -9,7 +9,7 @@ import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { Repository } from 'typeorm';
 import { SelectQueryBuilder } from 'typeorm/browser';
-import { UserResponse } from '../constant/user.constant';
+import { UserFieldsSimple, UserResponse } from '../constant/user.constant';
 import { GetListUserDto } from '../dto/user.dto';
 import { User } from '../entities/user.entity';
 import { ICreateUser } from '../interface/user.interface';
@@ -58,6 +58,7 @@ export class UserQueryService implements OnModuleInit {
 
 		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilterDto });
 
+		this.ormUtilsSelect.addSelectUser({ qb, fields: UserFieldsSimple });
 		this.ormUtilsSelect.addSelectUserRoleSimple(qb);
 		this.ormUtilsSelect.addSelectRoleSimple(qb);
 		this.ormUtilsSelect.addSelectRolePermissionSimple(qb);

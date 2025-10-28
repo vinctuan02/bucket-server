@@ -12,3 +12,7 @@ export function generateFileNameWithTimestamp(
 export function generateSixDigitOtp(): string {
 	return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+export function enumToArray<T extends object>(e: T): string[] {
+	return Object.keys(e).filter((k) => isNaN(Number(k)));
+}
