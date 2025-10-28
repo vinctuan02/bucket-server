@@ -26,12 +26,12 @@ export class OrmUtilsWhere {
 
 		qb.orderBy(fieldOrder, orderBy).take(pageSize).skip(skip);
 
-		this.andWhereKeywordsUser({ qb, keywords: keywordsUser });
-		this.andWhereKeywordsPermission({ qb, keywords: keywordsPermission });
-		this.andWhereKeywordsRole({ qb, keywords: keywordsRole });
+		this.andWhereUserKeywords({ qb, keywords: keywordsUser });
+		this.andWherePermissionKeywords({ qb, keywords: keywordsPermission });
+		this.andWhereRoleKeywords({ qb, keywords: keywordsRole });
 	}
 
-	andWhereKeywordsUser({
+	andWhereUserKeywords({
 		qb,
 		keywords,
 	}: {
@@ -68,7 +68,7 @@ export class OrmUtilsWhere {
 		return qb;
 	}
 
-	andWhereKeywordsPermission({
+	andWherePermissionKeywords({
 		qb,
 		keywords,
 	}: {
@@ -107,7 +107,7 @@ export class OrmUtilsWhere {
 		return qb;
 	}
 
-	andWhereKeywordsRole({
+	andWhereRoleKeywords({
 		qb,
 		keywords,
 	}: {
