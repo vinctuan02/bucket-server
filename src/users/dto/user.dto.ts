@@ -32,6 +32,9 @@ export class CreateUserDto {
 	name: string;
 
 	@IsOptional()
+	avatar?: string;
+
+	@IsOptional()
 	userRoles: {
 		roleId: string;
 	}[] = [];

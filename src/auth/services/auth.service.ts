@@ -35,7 +35,7 @@ export class AuthService {
 
 	// google
 	async validateGoogleUser(googleUser: any) {
-		const { email, name, providerId } = googleUser;
+		const { email, name, providerId, avatar } = googleUser;
 
 		let user = await this.usersService.findByEmail(email);
 
@@ -47,7 +47,7 @@ export class AuthService {
 				isActive: true,
 				provider: 'google',
 				providerId,
-				// avatar,
+				avatar,
 			});
 		}
 
@@ -175,6 +175,11 @@ export class AuthService {
 			password: hashed,
 		});
 
+		return user;
+	}
+
+	async getProfile(userId: string) {
+		const user = await this.usersService.findOne(userId);
 		return user;
 	}
 

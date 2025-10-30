@@ -18,8 +18,8 @@ export class UserBase {
 	@Column({ unique: true })
 	email: string;
 
-	@Column()
-	password: string;
+	@Column({ type: 'varchar', nullable: true })
+	password: string | null;
 
 	// @OneToMany(() => UserRole, (userRole) => userRole.user)
 	userRoles: UserRole[];

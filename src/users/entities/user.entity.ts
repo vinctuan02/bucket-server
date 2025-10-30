@@ -18,6 +18,9 @@ export class User extends BaseUserUUIDEntity {
 	password: string | null;
 
 	@Column({ type: 'varchar', nullable: true })
+	avatar: string | null;
+
+	@Column({ type: 'varchar', nullable: true })
 	provider: string | null;
 
 	@Column({ type: 'varchar', nullable: true })

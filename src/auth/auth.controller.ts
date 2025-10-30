@@ -1,5 +1,13 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Get,
+	Post,
+	Req,
+	Res,
+	UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import { Public } from './decorator/auth.decorator';
@@ -27,9 +35,11 @@ export class AuthController {
 	@Public()
 	@Get('google/redirect')
 	@UseGuards(AuthGuard('google'))
-	async googleRedirect(@Req() req) {
+	async googleRedirect(@Req() req, @Res() res) {
 		const data = await this.authService.validateGoogleUser(req.user);
-		return new ResponseSuccess({ data });
+		return res.redirect(
+			`http://localhost:3000/login?accessToken=${data.accessToken}`,
+		);
 	}
 
 	//
@@ -86,5 +96,11 @@ export class AuthController {
 	async resetPassword(@Body() dto: ResetPasswordDto) {
 		await this.authService.resetPassword(dto);
 		return new ResponseSuccess({ message: 'Password reset successfully' });
+	}
+
+	@Get('me')
+	async getProfile(@Req() req) {
+		const user = await this.authService.getProfile(req.user.userId);
+		return new ResponseSuccess({ data: user });
 	}
 }
