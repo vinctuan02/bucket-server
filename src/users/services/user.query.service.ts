@@ -1,5 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
@@ -12,30 +11,18 @@ import { USER_FIELDS_SIMPLE, UserResponse } from '../constant/user.constant';
 import { GetListUserDto } from '../dto/user.dto';
 import { User } from '../entities/user.entity';
 import { ICreateUser } from '../interface/user.interface';
-import { hashPass } from '../util/user.ulti';
 
 @Injectable()
-export class UserQueryService implements OnModuleInit {
+export class UserQueryService {
 	private readonly logger = new Logger(UserQueryService.name);
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepo: Repository<User>,
-
-		private readonly configService: ConfigService,
-
 		private readonly ormUtilsCreateQb: OrmUtilsCreateQb,
 		private readonly ormUtilsJoin: OrmUtilsJoin,
 		private readonly ormUtilsWhere: OrmUtilsWhere,
 		private readonly ormUtilsSelect: OrmUtilsSelect,
 	) {}
-
-	async onModuleInit() {
-		try {
-			await this.initUser();
-		} catch (error) {
-			this.logger.error('Error initializing database:', error);
-		}
-	}
 
 	async create(dto: ICreateUser): Promise<User> {
 		const user = this.userRepo.create(dto);
@@ -100,30 +87,5 @@ export class UserQueryService implements OnModuleInit {
 		if (!exists) {
 			throw new ResponseError(UserResponse.EMAIL_NOT_FOUND);
 		}
-	}
-
-	// private
-	private async initUser() {
-		const count = await this.userRepo.count();
-
-		if (count === 0) {
-			this.logger.log('Init user');
-
-			const password = await hashPass(
-				this.configService.get<string>('DEFAULT_PASS')!,
-			);
-
-			const entity = this.userRepo.create({
-				id: this.configService.get<string>('DEFAULT_USER_ID'),
-				name: this.configService.get<string>('DEFAULT_NAME'),
-				password,
-				isActive: this.configService.get<boolean>('DEFAULT_IS_ACTIVE'),
-				email: this.configService.get<string>('DEFAULT_EMAIL'),
-			});
-
-			return this.create(entity);
-		}
-
-		this.logger.log('Skip init user');
 	}
 }

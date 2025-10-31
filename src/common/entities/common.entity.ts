@@ -12,6 +12,9 @@ import {
 
 @Entity('users')
 export class UserBase {
+	@PrimaryGeneratedColumn('uuid')
+	id: string;
+
 	@Column()
 	name: string;
 
@@ -21,11 +24,17 @@ export class UserBase {
 	@Column({ type: 'varchar', nullable: true })
 	password: string | null;
 
+	@Column({ type: 'varchar', nullable: true })
+	avatar: string | null;
+
+	@Column({ type: 'varchar', nullable: true })
+	provider: string | null;
+
+	@Column({ type: 'varchar', nullable: true })
+	providerId: string | null;
+
 	// @OneToMany(() => UserRole, (userRole) => userRole.user)
 	userRoles: UserRole[];
-
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
 
 	@CreateDateColumn({ type: 'timestamptz' })
 	createdAt: Date;
