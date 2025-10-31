@@ -12,14 +12,20 @@ export class FolderService {
 		private readonly folderRepo: TreeRepository<Folder>,
 	) {}
 
-	async create(dto: CreateFolderDto): Promise<Folder> {
+	async create({
+		dto,
+		userId,
+	}: {
+		dto: CreateFolderDto;
+		userId: string;
+	}): Promise<Folder> {
 		const { parentId, name } = dto;
 
 		if (parentId) {
 			await this.findOne(parentId);
 		}
 
-		const folder = this.folderRepo.create({ name, parentId });
+		const folder = this.folderRepo.create({ name, parentId, userId });
 		return this.folderRepo.save(folder);
 	}
 

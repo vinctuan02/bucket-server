@@ -1,5 +1,6 @@
 // src/users/entities/user.entity.ts
 import { BaseUserUUIDEntity } from 'src/common/entities/common.entity';
+import { Folder } from 'src/folder/entities/folder.entity';
 import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
@@ -28,4 +29,7 @@ export class User extends BaseUserUUIDEntity {
 
 	@OneToMany(() => UserRole, (userRole) => userRole.user)
 	userRoles: UserRole[];
+
+	@OneToMany(() => Folder, (f) => f.user)
+	folders: Folder[];
 }

@@ -7,6 +7,7 @@ import {
 	Patch,
 	Post,
 } from '@nestjs/common';
+import { GetUserId } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import { CreateFolderDto, UpdateFolderDto } from './dto/folder.dto';
 import { FolderService } from './folder.service';
@@ -16,10 +17,9 @@ export class FolderController {
 	constructor(private readonly folderService: FolderService) {}
 
 	@Post()
-	async create(@Body() dto: CreateFolderDto) {
-		return new ResponseSuccess({
-			data: await this.folderService.create(dto),
-		});
+	async create(@GetUserId() userId: string, @Body() dto: CreateFolderDto) {
+		const data = await this.folderService.create({ dto, userId });
+		return new ResponseSuccess({ data });
 	}
 
 	@Get()
