@@ -27,7 +27,7 @@ export class BucketFileService {
 			await this.bucketFileQueryService.getList(query);
 		return new PageDto({
 			items,
-			metadata: { totalItems, pageSize, currentPage: page },
+			metadata: { totalItems, pageSize, page },
 		});
 	}
 

@@ -48,14 +48,14 @@ export class UsersService {
 	}
 
 	async getList(query: GetListUserDto) {
-		const { page: currentPage, pageSize } = query;
+		const { page, pageSize } = query;
 
 		const { items, totalItems } =
 			await this.userQueryService.getList(query);
 
 		return new PageDto({
 			items,
-			metadata: { totalItems, pageSize, currentPage },
+			metadata: { totalItems, pageSize, page },
 		});
 	}
 

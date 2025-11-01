@@ -28,13 +28,13 @@ export class PermissionsService {
 	}
 
 	async getList(query: GetListPermissionDto) {
-		const { page: currentPage, pageSize } = query;
+		const { page, pageSize } = query;
 		const { items, totalItems } =
 			await this.permissionQueryService.getList(query);
 
 		return new PageDto({
 			items,
-			metadata: { totalItems, pageSize, currentPage },
+			metadata: { totalItems, pageSize, page },
 		});
 	}
 

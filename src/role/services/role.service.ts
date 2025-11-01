@@ -40,13 +40,13 @@ export class RolesService {
 	}
 
 	async getList(query: GetListRoleDto) {
-		const { page: currentPage, pageSize } = query;
+		const { page, pageSize } = query;
 		const { items, totalItems } =
 			await this.roleQueryService.getList(query);
 
 		return new PageDto({
 			items,
-			metadata: { totalItems, pageSize, currentPage },
+			metadata: { totalItems, pageSize, page },
 		});
 	}
 

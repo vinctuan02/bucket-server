@@ -91,7 +91,7 @@ export class FileManagerService {
 		req: Request;
 		filter: GetlistFileNodeDto;
 	}) {
-		const { fileNodeParentId, page, pageSize } = filter;
+		const { fileNodeParentId } = filter;
 
 		const qb = this.createQbUtils.createFileNodeQb();
 		const filterOrm = new OrmFilterDto({
@@ -104,7 +104,7 @@ export class FileManagerService {
 
 		return new PageDto({
 			items,
-			metadata: { totalItems, currentPage: page, pageSize },
+			metadata: { ...filter, totalItems },
 		});
 	}
 
