@@ -10,10 +10,10 @@ import {
 	ValidateNested,
 } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
-import { FileEntity } from '../entities/bucket-file.entity';
+import { FileBucket } from '../entities/bucket-file.entity';
 import { UploadPurpose } from '../enum/bucket.enum';
 
-export type BucketDto = Partial<FileEntity> & {
+export type BucketDto = Partial<FileBucket> & {
 	uploadUrl?: string;
 	downloadUrl?: string;
 	readUrl?: string;
@@ -38,6 +38,10 @@ export class GetUploadUrlDto {
 	@MaxLength(100)
 	fileName: string;
 
+	@IsNumber()
+	@Min(0)
+	fileSize: number;
+
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(30)
@@ -48,20 +52,16 @@ export class GetUploadUrlDto {
 	@MaxLength(10)
 	extension: string;
 
-	@IsNumber()
-	@Min(0)
-	fileSize: number;
-
-	@IsNotEmpty()
-	@ValidateNested({ each: true })
-	@Type(() => FolderBucket)
-	folderBucket: FolderBucket;
-
 	@IsOptional()
 	keyMap?: string;
 
 	@IsNotEmpty()
 	bucket: string;
+
+	@IsNotEmpty()
+	@ValidateNested({ each: true })
+	@Type(() => FolderBucket)
+	folderBucket: FolderBucket;
 }
 
 export class GetListFileBucketDto extends BaseQueryDto {}

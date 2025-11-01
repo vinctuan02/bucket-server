@@ -18,3 +18,7 @@ export function getValuesOfEnum<T extends Record<string, string>>(
 ): string[] {
 	return Object.values(e).filter((v): v is string => typeof v === 'string');
 }
+
+export function getUserIdFromReq(req: any) {
+	return req.user.userId as string;
+}

@@ -9,7 +9,7 @@ import { JwtAuthGuard } from './auth/guard/auth.guard';
 import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
 import { validationSchema } from './common/config/common.validate-env';
-import { FolderModule } from './folder/folder.module';
+import { FileNodeModule } from './file-node/file-node.module';
 import { NotificationModule } from './notification/notification.module';
 import { PermissionModule } from './permission/permission.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
@@ -38,7 +38,7 @@ import { UsersModule } from './users/user.module';
 		PermissionModule,
 		UserRoleModule,
 		RolePermissionModule,
-		FolderModule,
+		FileNodeModule,
 	],
 	controllers: [AppController],
 	providers: [

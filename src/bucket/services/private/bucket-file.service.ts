@@ -3,24 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GetListFileBucketDto } from 'src/bucket/dto/bucket.dto';
 import { PageDto, ResponseError } from 'src/common/dto/common.response-dto';
 import { Repository } from 'typeorm';
-import { FileEntity } from '../../entities/bucket-file.entity';
+import { FileBucket } from '../../entities/bucket-file.entity';
 import { BucketFileQueryService } from './bucket-file.query.service';
 
 @Injectable()
 export class BucketFileService {
 	constructor(
-		@InjectRepository(FileEntity)
-		private readonly bucketFileRepo: Repository<FileEntity>,
+		@InjectRepository(FileBucket)
+		private readonly bucketFileRepo: Repository<FileBucket>,
 
 		private readonly bucketFileQueryService: BucketFileQueryService,
 	) {}
 
-	async create(data: Partial<FileEntity>): Promise<FileEntity> {
+	async create(data: Partial<FileBucket>): Promise<FileBucket> {
 		const file = this.bucketFileRepo.create(data);
 		return this.bucketFileRepo.save(file);
 	}
 
-	async getList(query: GetListFileBucketDto): Promise<PageDto<FileEntity>> {
+	async getList(query: GetListFileBucketDto): Promise<PageDto<FileBucket>> {
 		const { page, pageSize } = query;
 
 		const { items, totalItems } =
@@ -31,7 +31,7 @@ export class BucketFileService {
 		});
 	}
 
-	async findOne(id: string): Promise<FileEntity> {
+	async findOne(id: string): Promise<FileBucket> {
 		const file = await this.bucketFileRepo.findOne({ where: { id } });
 		if (!file) {
 			throw new ResponseError({

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { FileNodeFM } from 'src/file-node/fm/file-node.fm';
 import { PermissionFM } from 'src/permission/enums/permission.enum';
 import { UserFM } from 'src/users/enum/user.enum';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
@@ -22,6 +23,8 @@ export class OrmUtilsWhere {
 			skip,
 			fieldOrder,
 			orderBy,
+
+			fileNodeParentId,
 		} = filter;
 
 		qb.orderBy(fieldOrder, orderBy).take(pageSize).skip(skip);
@@ -29,6 +32,7 @@ export class OrmUtilsWhere {
 		this.andWhereUserKeywords({ qb, keywords: keywordsUser });
 		this.andWherePermissionKeywords({ qb, keywords: keywordsPermission });
 		this.andWhereRoleKeywords({ qb, keywords: keywordsRole });
+		this.andWhereFileNodeParentId({ qb, fileNodeParentId });
 	}
 
 	andWhereUserKeywords({
@@ -154,6 +158,20 @@ export class OrmUtilsWhere {
 		if (userId) {
 			qb.andWhere(`${UserFM.ID} = :userId`, {
 				userId,
+			});
+		}
+	}
+
+	andWhereFileNodeParentId({
+		fileNodeParentId,
+		qb,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		fileNodeParentId?: string;
+	}) {
+		if (fileNodeParentId) {
+			qb.andWhere(`${FileNodeFM.fileNodeParentId} = :fileNodeParentId`, {
+				fileNodeParentId,
 			});
 		}
 	}

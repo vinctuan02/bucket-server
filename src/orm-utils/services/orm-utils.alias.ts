@@ -4,4 +4,5 @@ export enum Alias {
 	ROLE = 'role',
 	ROLE_PERMISSION = 'rolePermission',
 	PERMISSION = 'permission',
+	fileNode = 'fileNode',
 }

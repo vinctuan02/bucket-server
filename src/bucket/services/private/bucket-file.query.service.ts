@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetListFileBucketDto } from 'src/bucket/dto/bucket.dto';
-import { FileEntity } from 'src/bucket/entities/bucket-file.entity';
+import { FileBucket } from 'src/bucket/entities/bucket-file.entity';
 import { Repository } from 'typeorm';
 import { SelectQueryBuilder } from 'typeorm/browser';
 
 @Injectable()
 export class BucketFileQueryService {
 	constructor(
-		@InjectRepository(FileEntity)
-		private readonly bucketFileRepo: Repository<FileEntity>,
+		@InjectRepository(FileBucket)
+		private readonly bucketFileRepo: Repository<FileBucket>,
 	) {}
 
 	private createBaseQuery() {
@@ -19,7 +19,7 @@ export class BucketFileQueryService {
 
 	private addFilter(
 		filter: GetListFileBucketDto,
-		qb: SelectQueryBuilder<FileEntity>,
+		qb: SelectQueryBuilder<FileBucket>,
 	) {
 		const { keywords } = filter;
 	}

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { FileNode } from 'src/file-node/entities/file-node.entity';
 import { Permission } from 'src/permission/entities/permission.entity';
 import { RolePermission } from 'src/role-permission/entities/role-permission.entity';
 import { Role } from 'src/role/entities/role.entity';
@@ -19,6 +20,7 @@ import { OrmUtilsWhere } from './services/orm-utils.where';
 			User,
 			UserRole,
 			RolePermission,
+			FileNode,
 		]),
 	],
 	providers: [

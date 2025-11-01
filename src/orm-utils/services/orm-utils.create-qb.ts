@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { FileNode } from 'src/file-node/entities/file-node.entity';
 import { Permission } from 'src/permission/entities/permission.entity';
 import { Role } from 'src/role/entities/role.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -17,6 +18,9 @@ export class OrmUtilsCreateQb {
 
 		@InjectRepository(User)
 		private readonly userRepo: Repository<User>,
+
+		@InjectRepository(FileNode)
+		private readonly fileNodeRepo: Repository<FileNode>,
 	) {}
 
 	createPermissionQb(alias?: string) {
@@ -31,5 +35,9 @@ export class OrmUtilsCreateQb {
 
 	createUserQb(alias?: string) {
 		return this.userRepo.createQueryBuilder(alias ?? Alias.USER);
+	}
+
+	createFileNodeQb(alias?: string) {
+		return this.fileNodeRepo.createQueryBuilder(alias ?? Alias.fileNode);
 	}
 }
