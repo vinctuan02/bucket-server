@@ -19,6 +19,7 @@ export class OrmUtilsWhere {
 			keywordsUser,
 			keywordsPermission,
 			keywordsRole,
+			keywordsFileNode,
 			pageSize,
 			skip,
 			fieldOrder,
@@ -32,6 +33,7 @@ export class OrmUtilsWhere {
 		this.andWhereUserKeywords({ qb, keywords: keywordsUser });
 		this.andWherePermissionKeywords({ qb, keywords: keywordsPermission });
 		this.andWhereRoleKeywords({ qb, keywords: keywordsRole });
+		this.andWhereFileNodeKeywords({ qb, keywords: keywordsFileNode });
 		this.andWhereFileNodeParentId({ qb, fileNodeParentId });
 	}
 
@@ -131,6 +133,42 @@ export class OrmUtilsWhere {
 						const condition = `
                             (${RoleFM.NAME} ILIKE :${paramName})
                             OR (CAST(${RoleFM.DESCRIPTION} AS TEXT) ILIKE :${paramName})
+                        `;
+
+						if (index === 0) {
+							subQb.where(condition, { [paramName]: paramValue });
+						} else {
+							subQb.orWhere(condition, {
+								[paramName]: paramValue,
+							});
+						}
+					});
+				}),
+			);
+		}
+
+		return qb;
+	}
+
+	andWhereFileNodeKeywords({
+		qb,
+		keywords,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		keywords?: string[];
+	}) {
+		if (keywords && keywords.length > 0) {
+			qb.andWhere(
+				new Brackets((subQb) => {
+					keywords.forEach((keyword, index) => {
+						const trimmed = keyword.trim();
+						if (!trimmed) return;
+
+						const paramName = `kw${index}`;
+						const paramValue = `%${trimmed}%`;
+
+						const condition = `
+                            (${FileNodeFM.name} ILIKE :${paramName})
                         `;
 
 						if (index === 0) {

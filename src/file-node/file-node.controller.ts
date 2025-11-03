@@ -40,6 +40,12 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Get('home')
+	async getHome(@Req() req: Request, @Query() filter: GetlistFileNodeDto) {
+		const data = await this.service.getHome({ req, filter });
+		return new ResponseSuccess({ data });
+	}
+
 	@Get('with-childrens')
 	async getListWithChildrens(
 		@Req() req: Request,

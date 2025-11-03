@@ -4,6 +4,7 @@ export class OrmFilterDto extends BaseQueryDto {
 	keywordsUser?: string[];
 	keywordsPermission?: string[];
 	keywordsRole?: string[];
+	keywordsFileNode?: string[];
 
 	fileNodeParentId?: string;
 

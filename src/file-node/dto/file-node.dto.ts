@@ -11,6 +11,8 @@ import {
 	ValidateNested,
 } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
+import { OrderDirection } from 'src/common/enums/common.enum';
+import { FileNodeFM } from '../fm/file-node.fm';
 
 class FileMetadata {
 	@IsString()
@@ -63,4 +65,10 @@ export class GetlistFileNodeDto extends BaseQueryDto {
 	@IsOptional()
 	@IsUUID()
 	fileNodeParentId?: string;
+
+	@IsOptional()
+	fieldOrder: FileNodeFM = FileNodeFM.name;
+
+	@IsOptional()
+	orderBy: OrderDirection = OrderDirection.ASC;
 }

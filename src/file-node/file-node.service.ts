@@ -58,6 +58,7 @@ export class FileManagerService {
 
 	async createRootFolder(userId: string) {
 		const folder = this.createFileNode({
+			id: userId,
 			name: userId,
 			type: TYPE_FILE_NODE.FOLDER,
 			ownerId: userId,
@@ -128,10 +129,46 @@ export class FileManagerService {
 		req: Request;
 		filter: GetlistFileNodeDto;
 	}) {
-		const { fileNodeParentId } = filter;
+		const { fileNodeParentId, keywords } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
-		const filterOrm = new OrmFilterDto({ fileNodeParentId });
+		const filterOrm = new OrmFilterDto({
+			fileNodeParentId,
+			keywordsFileNode: keywords,
+			...filter,
+		});
+
 		this.whereUtils.applyFilter({ qb, filter: filterOrm });
+
+		const [items, totalItems] = await qb.getManyAndCount();
+		return new PageDto({ items, metadata: { ...filter, totalItems } });
+	}
+
+	async createRootIfNotExists(userId: string) {
+		try {
+			await this.findOne(userId);
+		} catch (error) {
+			await this.createRootFolder(userId);
+		}
+	}
+
+	async getHome({
+		req,
+		filter,
+	}: {
+		req: Request;
+		filter: GetlistFileNodeDto;
+	}) {
+		const userId = getUserIdFromReq(req);
+
+		await this.createRootIfNotExists(userId);
+
+		const qb = this.createQbUtils.createFileNodeQb();
+		const filterOrm = new OrmFilterDto({
+			fileNodeParentId: userId,
+		});
+
+		this.whereUtils.applyFilter({ qb, filter: filterOrm });
+
 		const [items, totalItems] = await qb.getManyAndCount();
 		return new PageDto({ items, metadata: { ...filter, totalItems } });
 	}
@@ -228,6 +265,7 @@ export class FileManagerService {
 	}
 
 	private createFileNode(data: {
+		id?: string;
 		name: string;
 		type: TYPE_FILE_NODE;
 		ownerId?: string;
@@ -235,6 +273,7 @@ export class FileManagerService {
 		fileBucketId?: string;
 	}): FileNode {
 		return this.fileNodeRepo.create({
+			id: data.id,
 			name: data.name,
 			type: data.type,
 			ownerId: data.ownerId,
