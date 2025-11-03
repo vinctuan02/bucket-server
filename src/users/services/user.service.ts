@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AppEventType } from 'src/app-event/enum/app-event.enum';
 import { PageDto } from 'src/common/dto/common.response-dto';
 import { UserRoleService } from 'src/user-role/services/user-role.service';
 import { Repository } from 'typeorm';
@@ -16,6 +18,7 @@ export class UsersService {
 
 		private readonly userQueryService: UserQueryService,
 		private readonly userRolesService: UserRoleService,
+		private readonly eventEmitter: EventEmitter2,
 	) {}
 
 	async handleCreate(dto: CreateUserDto) {
@@ -38,7 +41,11 @@ export class UsersService {
 		const { password, email } = input;
 		await this.userQueryService.ensureEmailNotExists(email);
 		input.password = password ? await hashPass(password) : null;
-		return await this.userQueryService.create(input);
+		const user = await this.userQueryService.create(input);
+
+		this.eventEmitter.emit(AppEventType.USER_CREATED, user.id);
+
+		return user;
 	}
 
 	async activeAccount(id: string): Promise<User> {

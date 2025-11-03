@@ -7,6 +7,7 @@ import { ObjectFileBucket } from 'src/bucket/dto/bucket.dto';
 export class BucketMinioService {
 	private readonly logger = new Logger(BucketMinioService.name);
 	private readonly minioClient: Client;
+	private readonly bucket: string;
 
 	constructor(private readonly configService: ConfigService) {
 		this.minioClient = new Client({
@@ -16,10 +17,16 @@ export class BucketMinioService {
 			accessKey: this.configService.get<string>('MINIO_ACCESS_KEY')!,
 			secretKey: this.configService.get<string>('MINIO_SECRET_KEY')!,
 		});
+
+		this.bucket = configService.get<string>('MINIO_BUCKET') ?? '';
 	}
 
 	async getUploadUrl({ bucket, key, expiry }: ObjectFileBucket) {
-		return this.minioClient.presignedPutObject(bucket, key, expiry);
+		return this.minioClient.presignedPutObject(
+			bucket ?? this.bucket,
+			key,
+			expiry,
+		);
 	}
 
 	async getReadUrlSafe(input: ObjectFileBucket) {
@@ -32,14 +39,18 @@ export class BucketMinioService {
 	}
 
 	async getReadUrl({ bucket, key, expiry }: ObjectFileBucket) {
-		return this.minioClient.presignedGetObject(bucket, key, expiry);
+		return this.minioClient.presignedGetObject(
+			bucket ?? this.bucket,
+			key,
+			expiry,
+		);
 	}
 
 	async downloadFile({ bucket, key }: ObjectFileBucket) {
-		return this.minioClient.getObject(bucket, key);
+		return this.minioClient.getObject(bucket ?? this.bucket, key);
 	}
 
 	async deleteFile({ bucket, key }: ObjectFileBucket) {
-		return this.minioClient.removeObject(bucket, key);
+		return this.minioClient.removeObject(bucket ?? this.bucket, key);
 	}
 }

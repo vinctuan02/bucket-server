@@ -22,7 +22,7 @@ export type BucketDto = Partial<FileBucket> & {
 
 export class ObjectFileBucket {
 	key: string;
-	bucket: string;
+	bucket?: string;
 	expiry?: number = 3600;
 }
 
@@ -55,8 +55,8 @@ export class GetUploadUrlDto {
 	@IsOptional()
 	keyMap?: string;
 
-	@IsNotEmpty()
-	bucket: string;
+	// @IsNotEmpty()
+	// bucket: string;
 
 	@IsNotEmpty()
 	@ValidateNested({ each: true })

@@ -14,5 +14,6 @@ import { FileManagerService } from './file-node.service';
 	],
 	controllers: [FileManagerController],
 	providers: [FileManagerService],
+	exports: [FileManagerService],
 })
 export class FileNodeModule {}

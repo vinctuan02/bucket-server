@@ -10,7 +10,7 @@ import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
-import { Repository } from 'typeorm';
+import { TreeRepository } from 'typeorm';
 import {
 	CreateFileDto,
 	CreateFolderDto,
@@ -23,7 +23,7 @@ import { TYPE_FILE_NODE } from './enum/file-node.enum';
 export class FileManagerService {
 	constructor(
 		@InjectRepository(FileNode)
-		private readonly fileNodeRepo: Repository<FileNode>,
+		private readonly fileNodeRepo: TreeRepository<FileNode>,
 
 		private readonly bucketSv: BucketService,
 
@@ -32,48 +32,67 @@ export class FileManagerService {
 		private readonly selectUtils: OrmUtilsSelect,
 	) {}
 
-	// folder
+	// create
 	async createFolder({ req, dto }: { req: Request; dto: CreateFolderDto }) {
 		const { fileNodeParentId, name } = dto;
 		const userId = getUserIdFromReq(req);
+
+		const parent = await this.validateAndGetParent(fileNodeParentId);
 		if (fileNodeParentId) {
-			await this.isFolder(fileNodeParentId);
+			await this.validateUniqueConstraint({
+				fileNodeParentId,
+				name,
+				type: TYPE_FILE_NODE.FOLDER,
+			});
 		}
 
-		const folder = this.fileNodeRepo.create({
+		const folder = this.createFileNode({
 			name,
 			type: TYPE_FILE_NODE.FOLDER,
-			fileNodeParentId,
+			ownerId: userId,
+			parent,
+		});
+
+		return this.fileNodeRepo.save(folder);
+	}
+
+	async createRootFolder(userId: string) {
+		const folder = this.createFileNode({
+			name: userId,
+			type: TYPE_FILE_NODE.FOLDER,
 			ownerId: userId,
 		});
 
 		return this.fileNodeRepo.save(folder);
 	}
 
-	// // file
 	async createFile(dto: CreateFileDto) {
 		const { name, fileNodeParentId, fileMetadata } = dto;
 
+		const parent = await this.validateAndGetParent(fileNodeParentId);
 		if (fileNodeParentId) {
-			await this.isFolder(fileNodeParentId);
+			await this.validateUniqueConstraint({
+				fileNodeParentId,
+				name,
+				type: TYPE_FILE_NODE.FOLDER,
+			});
 		}
-
 		const fileBucketDb = await this.bucketSv.getUploadUrl({
 			...fileMetadata,
-			bucket: 'test',
 			folderBucket: { uploadPurpose: UploadPurpose.CASE_1 },
 		});
 
-		const fileNode = this.fileNodeRepo.create({
+		const entity = this.createFileNode({
 			name,
-			type: TYPE_FILE_NODE.FILE,
-			fileNodeParentId,
-			fileBucketId: fileBucketDb.id,
+			type: TYPE_FILE_NODE.FOLDER,
+			parent,
 		});
 
-		return { ...fileNode, uploadUrl: fileBucketDb.uploadUrl };
+		const saved = await this.fileNodeRepo.save(entity);
+		return { ...saved, uploadUrl: fileBucketDb.uploadUrl };
 	}
 
+	// read
 	async findOne(id: string) {
 		const entity = await this.fileNodeRepo.findOne({ where: { id } });
 
@@ -84,6 +103,24 @@ export class FileManagerService {
 		return entity;
 	}
 
+	async findOneWithChildren(id: string) {
+		const entity = await this.fileNodeRepo.findOne({
+			where: { id },
+			relations: { fileNodeChildrens: true },
+		});
+
+		if (!entity) {
+			throw new ResponseError({ message: 'File node not found' });
+		}
+
+		return entity;
+	}
+
+	async findOneFullTree(id: string): Promise<FileNode | null> {
+		const node = await this.findOne(id);
+		return await this.fileNodeRepo.findDescendantsTree(node);
+	}
+
 	async getList({
 		req,
 		filter,
@@ -92,26 +129,117 @@ export class FileManagerService {
 		filter: GetlistFileNodeDto;
 	}) {
 		const { fileNodeParentId } = filter;
-
 		const qb = this.createQbUtils.createFileNodeQb();
-		const filterOrm = new OrmFilterDto({
-			fileNodeParentId,
-		});
-
+		const filterOrm = new OrmFilterDto({ fileNodeParentId });
 		this.whereUtils.applyFilter({ qb, filter: filterOrm });
-
 		const [items, totalItems] = await qb.getManyAndCount();
+		return new PageDto({ items, metadata: { ...filter, totalItems } });
+	}
 
+	async getListWithChildrens({
+		req,
+		filter,
+	}: {
+		req: Request;
+		filter: GetlistFileNodeDto;
+	}) {
+		const { fileNodeParentId } = filter;
+		const qb = this.createQbUtils.createFileNodeQb();
+		const filterOrm = new OrmFilterDto({ fileNodeParentId });
+		this.whereUtils.applyFilter({ qb, filter: filterOrm });
+		const [items, totalItems] = await qb.getManyAndCount();
+		const result = await Promise.all(
+			items.map(async (item) => {
+				return this.fileNodeRepo.findDescendantsTree(item);
+			}),
+		);
 		return new PageDto({
-			items,
+			items: result,
 			metadata: { ...filter, totalItems },
 		});
 	}
 
+	async getListFullTree({
+		req,
+		filter,
+	}: {
+		req: Request;
+		filter: GetlistFileNodeDto;
+	}) {
+		const roots = await this.fileNodeRepo.findRoots();
+		const trees = await Promise.all(
+			roots.map(async (root) => {
+				return this.fileNodeRepo.findDescendantsTree(root);
+			}),
+		);
+		return new PageDto({
+			items: trees,
+			metadata: { ...filter, totalItems: trees.length },
+		});
+	}
+
+	async delete(id: string) {
+		const entity = await this.findOneWithChildren(id);
+		const { fileNodeChildrens } = entity;
+
+		if (fileNodeChildrens.length) {
+			await Promise.all(
+				fileNodeChildrens.map((child) => this.delete(child.id)),
+			);
+		}
+
+		if (entity.type === TYPE_FILE_NODE.FILE && entity.fileBucketId) {
+			await this.bucketSv.deleteSafe(entity.fileBucketId);
+		}
+
+		await this.fileNodeRepo.delete(id);
+	}
+
+	// private
 	private async isFolder(parentId: string) {
 		const entity = await this.findOne(parentId);
 		if (entity.type !== TYPE_FILE_NODE.FOLDER) {
 			throw new ResponseError({ message: 'Invalid parentId' });
 		}
+	}
+
+	private async validateUniqueConstraint(input: {
+		fileNodeParentId: string;
+		name: string;
+		type: TYPE_FILE_NODE;
+	}) {
+		const isExists = await this.fileNodeRepo.findOne({ where: input });
+
+		if (isExists) {
+			throw new ResponseError({
+				message: `A ${input.type.toLowerCase()} name "${input.name}" already exists in this folder.`,
+			});
+		}
+	}
+
+	private async validateAndGetParent(
+		fileNodeParentId?: string,
+	): Promise<FileNode | null> {
+		if (!fileNodeParentId) return null;
+
+		const parent = await this.findOne(fileNodeParentId);
+		await this.isFolder(fileNodeParentId);
+		return parent;
+	}
+
+	private createFileNode(data: {
+		name: string;
+		type: TYPE_FILE_NODE;
+		ownerId?: string;
+		parent?: FileNode | null;
+		fileBucketId?: string;
+	}): FileNode {
+		return this.fileNodeRepo.create({
+			name: data.name,
+			type: data.type,
+			ownerId: data.ownerId,
+			fileNodeParent: data.parent || null,
+			fileBucketId: data.fileBucketId || null,
+		});
 	}
 }

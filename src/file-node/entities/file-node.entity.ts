@@ -6,12 +6,17 @@ import {
 	Entity,
 	JoinColumn,
 	ManyToOne,
-	OneToMany,
 	OneToOne,
+	Tree,
+	TreeChildren,
+	TreeParent,
+	Unique,
 } from 'typeorm';
 import { TYPE_FILE_NODE } from '../enum/file-node.enum';
 
 @Entity('file_node')
+@Tree('closure-table')
+@Unique(['fileNodeParentId', 'type', 'name'])
 export class FileNode extends BaseUUIDEntity {
 	@Column({ type: 'varchar', length: 255 })
 	name: string;
@@ -40,13 +45,10 @@ export class FileNode extends BaseUUIDEntity {
 	@JoinColumn({ name: 'owner_id' })
 	owner?: User;
 
-	// tree
-	@ManyToOne(() => FileNode, (parent) => parent.fileNodeChildrens, {
-		nullable: true,
-	})
+	@TreeParent()
 	@JoinColumn({ name: 'file_node_parent_id' })
 	fileNodeParent: FileNode | null;
 
-	@OneToMany(() => FileNode, (children) => children.fileNodeParent)
+	@TreeChildren()
 	fileNodeChildrens: FileNode[];
 }

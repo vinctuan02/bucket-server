@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { PageDto } from 'src/common/dto/common.response-dto';
 import { generateFileNameWithTimestamp } from 'src/common/util/common.util';
@@ -13,13 +13,15 @@ import { BucketMinioService } from './private/bucket-minio.service';
 
 @Injectable()
 export class BucketService {
+	private readonly logger = new Logger(BucketService.name);
+
 	constructor(
 		private readonly bucketMinioService: BucketMinioService,
 		private readonly bucketFileService: BucketFileService,
 	) {}
 
 	async getUploadUrl(input: GetUploadUrlDto): Promise<BucketDto> {
-		const { keyMap, folderBucket, bucket, fileName } = input;
+		const { keyMap, folderBucket, fileName } = input;
 
 		const key = this.getKey({
 			previousKey: this.getPreviousKey(folderBucket),
@@ -35,7 +37,6 @@ export class BucketService {
 			id: file.id,
 			uploadUrl: await this.bucketMinioService.getUploadUrl({
 				key,
-				bucket,
 			}),
 
 			keyMap,
@@ -83,6 +84,14 @@ export class BucketService {
 			id: file.id,
 			downloadUrl,
 		};
+	}
+
+	async deleteSafe(id: string) {
+		try {
+			await this.delete(id);
+		} catch (e) {
+			this.logger.error(e);
+		}
 	}
 
 	async delete(id: string) {

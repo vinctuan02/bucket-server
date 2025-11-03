@@ -17,7 +17,7 @@ import { GoogleStrategy, JwtStrategy } from './strategy/auth.strategy';
 			inject: [ConfigService],
 			useFactory: (config: ConfigService) => ({
 				secret: config.get<string>('JWT_SECRET'),
-				signOptions: { expiresIn: '1d' },
+				signOptions: { expiresIn: '30d' },
 			}),
 		}),
 		NotificationModule,

@@ -1,5 +1,14 @@
 // src/modules/file-manager/file-manager.controller.ts
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	Post,
+	Query,
+	Req,
+} from '@nestjs/common';
 import type { Request } from 'express';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import {
@@ -29,5 +38,46 @@ export class FileManagerController {
 	async getList(@Req() req: Request, @Query() filter: GetlistFileNodeDto) {
 		const data = await this.service.getList({ req, filter });
 		return new ResponseSuccess({ data });
+	}
+
+	@Get('with-childrens')
+	async getListWithChildrens(
+		@Req() req: Request,
+		@Query() filter: GetlistFileNodeDto,
+	) {
+		const data = await this.service.getListWithChildrens({ req, filter });
+		return new ResponseSuccess({ data });
+	}
+
+	@Get('full-tree')
+	async getListFullTree(
+		@Req() req: Request,
+		@Query() filter: GetlistFileNodeDto,
+	) {
+		const data = await this.service.getListFullTree({ req, filter });
+		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id')
+	async findOne(@Param('id') id: string) {
+		const data = await this.service.findOne(id);
+		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id/with-childrens')
+	async findOneWithChildrens(@Param('id') id: string) {
+		const data = await this.service.findOneWithChildren(id);
+		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id/full-tree')
+	async findOneFullTree(@Param('id') id: string) {
+		const data = await this.service.findOneFullTree(id);
+		return new ResponseSuccess({ data });
+	}
+
+	@Delete(':id')
+	async delete(@Req() req: Request, @Param('id') id: string) {
+		await this.service.delete(id);
 	}
 }

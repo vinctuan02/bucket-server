@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppEventModule } from './app-event/app-event.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/user.module';
 			inject: [ConfigService],
 			useFactory: getDatabaseConfig,
 		}),
+		AppEventModule,
 
 		NotificationModule,
 		UsersModule,
