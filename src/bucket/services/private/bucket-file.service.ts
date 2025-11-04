@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetListFileBucketDto } from 'src/bucket/dto/bucket.dto';
 import { PageDto, ResponseError } from 'src/common/dto/common.response-dto';
@@ -8,15 +9,24 @@ import { BucketFileQueryService } from './bucket-file.query.service';
 
 @Injectable()
 export class BucketFileService {
+	private MINIO_BUCKET: string;
+
 	constructor(
 		@InjectRepository(FileBucket)
 		private readonly bucketFileRepo: Repository<FileBucket>,
 
 		private readonly bucketFileQueryService: BucketFileQueryService,
-	) {}
+		private readonly configService: ConfigService,
+	) {
+		this.MINIO_BUCKET =
+			this.configService.get<string>('MINIO_BUCKET') ?? '';
+	}
 
 	async create(data: Partial<FileBucket>): Promise<FileBucket> {
-		const file = this.bucketFileRepo.create(data);
+		const file = this.bucketFileRepo.create({
+			...data,
+			bucket: data.bucket ?? this.MINIO_BUCKET,
+		});
 		return this.bucketFileRepo.save(file);
 	}
 

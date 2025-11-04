@@ -14,6 +14,18 @@ import { BaseQueryDto } from 'src/common/dto/common.query-dto';
 import { OrderDirection } from 'src/common/enums/common.enum';
 import { FileNodeFM } from '../fm/file-node.fm';
 
+export class CreateFolderDto {
+	@IsString()
+	@IsNotEmpty()
+	name: string;
+
+	@IsOptional()
+	@IsUUID()
+	fileNodeParentId?: string;
+}
+
+export class UpdateFolderDto extends PartialType(CreateFolderDto) {}
+
 class FileMetadata {
 	@IsString()
 	@IsNotEmpty()
@@ -34,18 +46,6 @@ class FileMetadata {
 	@MaxLength(10)
 	extension: string;
 }
-
-export class CreateFolderDto {
-	@IsString()
-	@IsNotEmpty()
-	name: string;
-
-	@IsOptional()
-	@IsUUID()
-	fileNodeParentId?: string;
-}
-
-export class UpdateFolderDto extends PartialType(CreateFolderDto) {}
 
 export class CreateFileDto {
 	@IsString()

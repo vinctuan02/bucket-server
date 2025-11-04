@@ -82,7 +82,7 @@ export class FileManagerService {
 			await this.validateUniqueConstraint({
 				fileNodeParentId,
 				name,
-				type: TYPE_FILE_NODE.FOLDER,
+				type: TYPE_FILE_NODE.FILE,
 			});
 		}
 		const fileBucketDb = await this.bucketSv.getUploadUrl({
@@ -92,7 +92,7 @@ export class FileManagerService {
 
 		const entity = this.createFileNode({
 			name,
-			type: TYPE_FILE_NODE.FOLDER,
+			type: TYPE_FILE_NODE.FILE,
 			parent,
 		});
 
