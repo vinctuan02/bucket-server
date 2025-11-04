@@ -34,6 +34,12 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
+	// @Post(':id/submit-file')
+	// async submitFile(@Body() dto: CreateFileDto) {
+	// 	const data = await this.service.createFile(dto);
+	// 	return new ResponseSuccess({ data });
+	// }
+
 	@Get()
 	async getList(@Req() req: Request, @Query() filter: GetlistFileNodeDto) {
 		const data = await this.service.getList({ req, filter });
@@ -84,6 +90,11 @@ export class FileManagerController {
 
 	@Delete(':id')
 	async delete(@Req() req: Request, @Param('id') id: string) {
-		await this.service.delete(id);
+		await this.service.moveToTrash(id);
+	}
+
+	@Delete(':id/permanent')
+	async deletePermanent(@Req() req: Request, @Param('id') id: string) {
+		await this.service.deletePermanent(id);
 	}
 }

@@ -36,6 +36,13 @@ export class FileNode extends BaseUUIDEntity {
 	@Column({ type: 'uuid', nullable: true })
 	fileNodeParentId: string | null;
 
+	// hanlde delete
+	@Column({ type: 'boolean', default: false })
+	isDelete: boolean;
+
+	@Column({ type: 'timestamptz', nullable: true })
+	deletedAt: Date | null;
+
 	// relations
 	@OneToOne(() => FileBucket, { nullable: true })
 	@JoinColumn({ name: 'file_bucket_id' })

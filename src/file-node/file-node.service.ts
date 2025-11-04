@@ -1,6 +1,9 @@
 // src/modules/file-manager/file-manager.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import dayjs from 'dayjs';
 import type { Request } from 'express';
 import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
@@ -10,7 +13,7 @@ import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
-import { TreeRepository } from 'typeorm';
+import { LessThanOrEqual, TreeRepository } from 'typeorm';
 import {
 	CreateFileDto,
 	CreateFolderDto,
@@ -21,9 +24,13 @@ import { TYPE_FILE_NODE } from './enum/file-node.enum';
 
 @Injectable()
 export class FileManagerService {
+	private readonly logger = new Logger(FileManagerService.name);
+
 	constructor(
 		@InjectRepository(FileNode)
 		private readonly fileNodeRepo: TreeRepository<FileNode>,
+
+		private readonly configService: ConfigService,
 
 		private readonly bucketSv: BucketService,
 
@@ -215,13 +222,30 @@ export class FileManagerService {
 		});
 	}
 
-	async delete(id: string) {
+	async moveToTrash(id: string) {
+		const entity = await this.findOneWithChildren(id);
+
+		const now = new Date();
+		await this.fileNodeRepo.update(id, { deletedAt: now, isDelete: true });
+
+		if (entity.fileNodeChildrens?.length) {
+			await Promise.all(
+				entity.fileNodeChildrens.map((child) =>
+					this.moveToTrash(child.id),
+				),
+			);
+		}
+	}
+
+	async deletePermanent(id: string) {
 		const entity = await this.findOneWithChildren(id);
 		const { fileNodeChildrens } = entity;
 
 		if (fileNodeChildrens.length) {
 			await Promise.all(
-				fileNodeChildrens.map((child) => this.delete(child.id)),
+				fileNodeChildrens.map((child) =>
+					this.deletePermanent(child.id),
+				),
 			);
 		}
 
@@ -229,7 +253,25 @@ export class FileManagerService {
 			await this.bucketSv.deleteSafe(entity.fileBucketId);
 		}
 
-		await this.fileNodeRepo.delete(id);
+		await this.fileNodeRepo.delete(entity.id);
+	}
+
+	@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+	async handleCron() {
+		const days = this.configService.get<number>('TRASH_EXPIRE_DAYS', 30);
+		const limitDate = dayjs().subtract(days, 'day').toDate();
+
+		const oldFiles = await this.fileNodeRepo.find({
+			where: { deletedAt: LessThanOrEqual(limitDate) },
+		});
+
+		for (const file of oldFiles) {
+			try {
+				await this.deletePermanent(file.id);
+			} catch (e) {
+				this.logger.error(`Delete failed for ${file.id}`, e);
+			}
+		}
 	}
 
 	// private

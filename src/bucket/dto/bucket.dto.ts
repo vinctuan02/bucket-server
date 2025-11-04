@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+	IsBoolean,
 	IsEnum,
 	IsNotEmpty,
 	IsNumber,
@@ -62,6 +63,10 @@ export class GetUploadUrlDto {
 	@ValidateNested({ each: true })
 	@Type(() => FolderBucket)
 	folderBucket: FolderBucket;
+
+	@IsOptional()
+	@IsBoolean()
+	isSubmitted?: boolean;
 }
 
 export class GetListFileBucketDto extends BaseQueryDto {}
