@@ -76,6 +76,22 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Get(':id/childrens')
+	async getChildrens(
+		@Param('id') id: string,
+		@Req() req: Request,
+		@Query() filter: GetlistFileNodeDto,
+	) {
+		const data = await this.service.getChildrens({ id, filter, req });
+		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id/breadcrumbs')
+	async getBreadcrumbs(@Param('id') id: string) {
+		const data = await this.service.getBreadcrumbs(id);
+		return new ResponseSuccess({ data });
+	}
+
 	@Get(':id/with-childrens')
 	async findOneWithChildrens(@Param('id') id: string) {
 		const data = await this.service.findOneWithChildren(id);
@@ -88,9 +104,15 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Get(':id/read')
+	async readFile(@Param('id') id: string) {
+		const data = await this.service.readFile(id);
+		return new ResponseSuccess({ data });
+	}
+
 	@Delete(':id')
 	async delete(@Req() req: Request, @Param('id') id: string) {
-		await this.service.moveToTrash(id);
+		await this.service.delete(id);
 	}
 
 	@Delete(':id/permanent')

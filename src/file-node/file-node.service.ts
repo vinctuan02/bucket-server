@@ -94,6 +94,7 @@ export class FileManagerService {
 			name,
 			type: TYPE_FILE_NODE.FILE,
 			parent,
+			fileBucketId: fileBucketDb.id,
 		});
 
 		const saved = await this.fileNodeRepo.save(entity);
@@ -109,6 +110,52 @@ export class FileManagerService {
 		}
 
 		return entity;
+	}
+
+	async getFile(id: string) {
+		const entity = await this.fileNodeRepo.findOne({
+			where: { id, type: TYPE_FILE_NODE.FILE },
+		});
+
+		if (!entity) {
+			throw new ResponseError({ message: 'File not found' });
+		}
+
+		return entity;
+	}
+
+	async getChildrens({
+		id,
+		filter,
+		req,
+	}: {
+		id: string;
+		filter: GetlistFileNodeDto;
+		req: Request;
+	}) {
+		filter.fileNodeParentId = id;
+		const data = await this.getList({ req, filter });
+
+		return data;
+	}
+
+	async getBreadcrumbs(id: string) {
+		const node = await this.fileNodeRepo.findOne({
+			where: { id },
+			relations: ['fileNodeParent'],
+		});
+
+		if (!node) {
+			throw new ResponseError({ message: 'File node not found' });
+		}
+
+		const parents = await this.fileNodeRepo.manager
+			.getTreeRepository(FileNode)
+			.findAncestors(node);
+
+		parents[0].name = 'Home';
+
+		return parents;
 	}
 
 	async findOneWithChildren(id: string) {
@@ -127,6 +174,13 @@ export class FileManagerService {
 	async findOneFullTree(id: string): Promise<FileNode | null> {
 		const node = await this.findOne(id);
 		return await this.fileNodeRepo.findDescendantsTree(node);
+	}
+
+	async readFile(id: string) {
+		const file = await this.getFile(id);
+		const data = await this.bucketSv.getReadUrl(file.fileBucketId ?? '');
+
+		return { id, fileBucket: data };
 	}
 
 	async getList({
@@ -222,6 +276,16 @@ export class FileManagerService {
 		});
 	}
 
+	async delete(id: string) {
+		const entity = await this.findOneWithChildren(id);
+
+		if (entity.isDelete) {
+			await this.deletePermanent(id);
+		} else {
+			await this.moveToTrash(id);
+		}
+	}
+
 	async moveToTrash(id: string) {
 		const entity = await this.findOneWithChildren(id);
 
@@ -249,11 +313,11 @@ export class FileManagerService {
 			);
 		}
 
+		await this.fileNodeRepo.delete(entity.id);
+
 		if (entity.type === TYPE_FILE_NODE.FILE && entity.fileBucketId) {
 			await this.bucketSv.deleteSafe(entity.fileBucketId);
 		}
-
-		await this.fileNodeRepo.delete(entity.id);
 	}
 
 	@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
