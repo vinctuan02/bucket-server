@@ -2,10 +2,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { ResponseError } from 'src/common/dto/common.response-dto';
 import { generateSixDigitOtp } from 'src/common/util/common.util';
 import { NotificationService } from 'src/notification/services/notification.service';
 import { UsersService } from 'src/users/services/user.service';
+import { AuthResponseError } from '../constant/auth.const';
 import {
 	LoginDto,
 	RefreshTokenDto,
@@ -76,14 +76,14 @@ export class AuthService {
 		const verification = this.getVerificationCode(userId);
 
 		if (!verification || verification.code !== code) {
-			throw new ResponseError({ message: 'Invalid verification code' });
+			throw AuthResponseError.INVALID_VERIFY_CODE();
 		}
 
 		const user = await this.usersService.findOne(userId);
 
 		if (user.isActive) {
 			this.verificationCodes.delete(userId);
-			throw new ResponseError({ message: 'Account already verified' });
+			throw AuthResponseError.ACCOUNT_ALREADY_VERIFIED();
 		}
 
 		const result = await this.usersService.activeAccount(userId);
@@ -125,7 +125,7 @@ export class AuthService {
 		const payload = this.jwtService.verify(dto.refreshToken);
 
 		if (payload.type !== TypeToken.REFRESH) {
-			throw new ResponseError({ message: 'Invalid token type' });
+			throw AuthResponseError.INVALID_TOKEN_TYPE();
 		}
 
 		return this.generateTokens({
@@ -138,7 +138,7 @@ export class AuthService {
 		const user = await this.authValidateService.ensureEmailExists(email);
 
 		if (!user.isActive) {
-			throw new ResponseError({ message: 'Account is not active' });
+			throw AuthResponseError.ACCOUNT_IS_NOT_ACTIVE();
 		}
 
 		const { code } = this.createVerificationCode(user.id);
@@ -157,7 +157,7 @@ export class AuthService {
 		const verification = this.getVerificationCode(userId);
 
 		if (!verification || verification.code !== code) {
-			throw new ResponseError({ message: 'Invalid verification code' });
+			throw AuthResponseError.INVALID_VERIFY_CODE();
 		}
 
 		this.verificationCodes.delete(userId);

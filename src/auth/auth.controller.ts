@@ -9,7 +9,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ResponseSuccess } from 'src/common/dto/common.response-dto';
+import { AuthResponseSuccess } from './constant/auth.const';
 import { Public } from './decorator/auth.decorator';
 import {
 	ForgotPasswordDto,
@@ -47,68 +47,62 @@ export class AuthController {
 	@Post('register')
 	async register(@Body() dto: RegisterDto) {
 		const data = await this.authService.register(dto);
-		return new ResponseSuccess({ data });
+		return AuthResponseSuccess.COMMON({ data });
 	}
 
 	@Public()
 	@Post('verify-email')
 	async verify(@Body() body: VerifyAccountDto) {
 		const data = await this.authService.verifyAccount(body);
-		return new ResponseSuccess({
-			data,
-			message: 'Account verified successfully',
-		});
+		return AuthResponseSuccess.VERIFY_EMAIL({ data });
 	}
 
 	@Public()
 	@Post('login')
 	async login(@Body() dto: LoginDto) {
 		const data = await this.authService.login(dto);
-		return new ResponseSuccess({ data });
+		return AuthResponseSuccess.COMMON({ data });
 	}
 
 	@Public()
 	@Post('refresh-token')
 	refreshTokens(@Body() dto: RefreshTokenDto) {
 		const data = this.authService.refreshTokens(dto);
-		return new ResponseSuccess({ data });
+		return AuthResponseSuccess.COMMON({ data });
 	}
 
 	@Public()
 	@Post('forgot-password')
 	async forgotPassword(@Body() dto: ForgotPasswordDto) {
 		await this.authService.forgotPassword(dto.email);
-		return new ResponseSuccess({ message: 'Reset code sent to email' });
+		return AuthResponseSuccess.FORGOT_PASSWORD({});
 	}
 
 	@Public()
 	@Post('verify-reset-code')
 	verifyResetCode(@Body() dto: VerifyResetCodeDto) {
 		const data = this.authService.verifyResetCode(dto);
-		return new ResponseSuccess({
-			message: 'Code verified successfully',
-			data,
-		});
+		return AuthResponseSuccess.COMMON({ data });
 	}
 
 	@Public()
 	@Post('reset-password')
 	async resetPassword(@Body() dto: ResetPasswordDto) {
 		await this.authService.resetPassword(dto);
-		return new ResponseSuccess({ message: 'Password reset successfully' });
+		return AuthResponseSuccess.RERET_PASSWORD({});
 	}
 
 	@Get('me')
 	async getProfile(@Req() req) {
-		const user = await this.authService.getProfile(req.user.userId);
-		return new ResponseSuccess({ data: user });
+		const data = await this.authService.getProfile(req.user.userId);
+		return AuthResponseSuccess.COMMON({ data });
 	}
 
 	@Get('me/detail')
 	async getProfileWithPermissions(@Req() req) {
-		const user = await this.authService.getProfileWithPermissions(
+		const data = await this.authService.getProfileWithPermissions(
 			req.user.userId,
 		);
-		return new ResponseSuccess({ data: user });
+		return AuthResponseSuccess.COMMON({ data });
 	}
 }
