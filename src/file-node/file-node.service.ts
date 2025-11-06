@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import type { Request } from 'express';
 import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
-import { PageDto, ResponseError } from 'src/common/dto/common.response-dto';
+import { PageDto } from 'src/common/dto/common.response-dto';
 import { getUserIdFromReq } from 'src/common/util/common.util';
 import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
@@ -15,6 +15,7 @@ import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
 import { LessThanOrEqual, TreeRepository } from 'typeorm';
+import { FileNodeResponseError } from './const/file-node.const';
 import {
 	CreateFileDto,
 	CreateFolderDto,
@@ -125,7 +126,7 @@ export class FileManagerService {
 		const entity = await this.fileNodeRepo.findOne({ where: { id } });
 
 		if (!entity) {
-			throw new ResponseError({ message: 'File node not found' });
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
 		}
 
 		return entity;
@@ -137,7 +138,7 @@ export class FileManagerService {
 		});
 
 		if (!entity) {
-			throw new ResponseError({ message: 'File not found' });
+			throw FileNodeResponseError.FILE_NOT_FOUND();
 		}
 
 		return entity;
@@ -165,7 +166,7 @@ export class FileManagerService {
 		});
 
 		if (!node) {
-			throw new ResponseError({ message: 'File node not found' });
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
 		}
 
 		const parents = await this.fileNodeRepo.manager
@@ -184,7 +185,7 @@ export class FileManagerService {
 		});
 
 		if (!entity) {
-			throw new ResponseError({ message: 'File node not found' });
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
 		}
 
 		return entity;
@@ -202,7 +203,7 @@ export class FileManagerService {
 		});
 
 		if (!entity) {
-			throw new ResponseError({ message: 'File node not found' });
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
 		}
 
 		return entity;
@@ -384,7 +385,7 @@ export class FileManagerService {
 	private async isFolder(parentId: string) {
 		const entity = await this.findOne(parentId);
 		if (entity.type !== TYPE_FILE_NODE.FOLDER) {
-			throw new ResponseError({ message: 'Invalid parentId' });
+			throw FileNodeResponseError.INVALID_PARENT_ID();
 		}
 	}
 
@@ -409,9 +410,7 @@ export class FileManagerService {
 		});
 
 		if (isExists) {
-			throw new ResponseError({
-				message: `File or folder already exists`,
-			});
+			throw FileNodeResponseError.FILE_NODE_ALREADY_EXISTS();
 		}
 	}
 
