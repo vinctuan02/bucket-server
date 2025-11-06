@@ -13,6 +13,7 @@ import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
+import { UserStorageService } from 'src/user-storage/user-storage.service';
 import { LessThanOrEqual, TreeRepository } from 'typeorm';
 import {
 	CreateFileDto,
@@ -37,6 +38,8 @@ export class FileManagerService {
 		private readonly createQbUtils: OrmUtilsCreateQb,
 		private readonly whereUtils: OrmUtilsWhere,
 		private readonly selectUtils: OrmUtilsSelect,
+
+		private readonly userStorageService: UserStorageService,
 	) {}
 
 	// create
@@ -71,13 +74,22 @@ export class FileManagerService {
 			ownerId: userId,
 		});
 
+		await this.userStorageService.createDefault({ userId });
+
 		return this.fileNodeRepo.save(folder);
 	}
 
-	async createFile(dto: CreateFileDto) {
+	async createFile({ dto, req }: { dto: CreateFileDto; req: Request }) {
 		const { name, fileNodeParentId, fileMetadata } = dto;
+		const userId = getUserIdFromReq(req);
 
 		const parent = await this.validateAndGetParent(fileNodeParentId);
+
+		await this.userStorageService.validateStorageCapacity({
+			userId,
+			fileSize: fileMetadata.fileSize,
+		});
+
 		if (fileNodeParentId) {
 			await this.validateUniqueConstraint({
 				fileNodeParentId,
@@ -95,9 +107,16 @@ export class FileManagerService {
 			type: TYPE_FILE_NODE.FILE,
 			parent,
 			fileBucketId: fileBucketDb.id,
+			ownerId: userId,
 		});
 
 		const saved = await this.fileNodeRepo.save(entity);
+
+		await this.userStorageService.increaseUsed({
+			userId,
+			size: fileMetadata.fileSize,
+		});
+
 		return { ...saved, uploadUrl: fileBucketDb.uploadUrl };
 	}
 
@@ -162,6 +181,24 @@ export class FileManagerService {
 		const entity = await this.fileNodeRepo.findOne({
 			where: { id },
 			relations: { fileNodeChildrens: true },
+		});
+
+		if (!entity) {
+			throw new ResponseError({ message: 'File node not found' });
+		}
+
+		return entity;
+	}
+
+	async findOneWithChildrenAndFileBucket(id: string) {
+		const entity = await this.fileNodeRepo.findOne({
+			where: { id },
+			relations: {
+				fileBucket: true,
+				fileNodeChildrens: {
+					fileBucket: true,
+				},
+			},
 		});
 
 		if (!entity) {
@@ -303,8 +340,8 @@ export class FileManagerService {
 	}
 
 	async deletePermanent(id: string) {
-		const entity = await this.findOneWithChildren(id);
-		const { fileNodeChildrens } = entity;
+		const fileNode = await this.findOneWithChildrenAndFileBucket(id);
+		const { fileNodeChildrens } = fileNode;
 
 		if (fileNodeChildrens.length) {
 			await Promise.all(
@@ -314,10 +351,14 @@ export class FileManagerService {
 			);
 		}
 
-		await this.fileNodeRepo.delete(entity.id);
+		await this.fileNodeRepo.delete(fileNode.id);
 
-		if (entity.type === TYPE_FILE_NODE.FILE && entity.fileBucketId) {
-			await this.bucketSv.deleteSafe(entity.fileBucketId);
+		if (fileNode.type === TYPE_FILE_NODE.FILE && fileNode.fileBucketId) {
+			await this.bucketSv.deleteSafe(fileNode.fileBucketId);
+			await this.userStorageService.decreaseUsed({
+				userId: fileNode.ownerId,
+				size: fileNode.fileBucket?.fileSize ?? 0,
+			});
 		}
 	}
 

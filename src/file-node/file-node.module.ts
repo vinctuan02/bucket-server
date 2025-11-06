@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BucketModule } from 'src/bucket/bucket.module';
 import { OrmUtilsModule } from 'src/orm-utils/orm-utils.module';
+import { UserStorageModule } from 'src/user-storage/user-storage.module';
 import { FileNode } from './entities/file-node.entity';
 import { FileManagerController } from './file-node.controller';
 import { FileManagerService } from './file-node.service';
@@ -11,6 +12,7 @@ import { FileManagerService } from './file-node.service';
 		TypeOrmModule.forFeature([FileNode]),
 		OrmUtilsModule,
 		BucketModule,
+		UserStorageModule,
 	],
 	controllers: [FileManagerController],
 	providers: [FileManagerService],

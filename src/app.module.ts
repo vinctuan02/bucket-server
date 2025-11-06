@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppEventModule } from './app-event/app-event.module';
+import { AppInitService } from './app-init.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -16,6 +17,7 @@ import { PermissionModule } from './permission/permission.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { RoleModule } from './role/role.module';
 import { UserRoleModule } from './user-role/user-role.module';
+import { UserStorageModule } from './user-storage/user-storage.module';
 import { UsersModule } from './users/user.module';
 
 @Module({
@@ -41,10 +43,12 @@ import { UsersModule } from './users/user.module';
 		UserRoleModule,
 		RolePermissionModule,
 		FileNodeModule,
+		UserStorageModule,
 	],
 	controllers: [AppController],
 	providers: [
 		AppService,
+		AppInitService,
 		{
 			provide: APP_GUARD,
 			useClass: JwtAuthGuard,

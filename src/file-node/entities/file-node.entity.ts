@@ -30,8 +30,8 @@ export class FileNode extends BaseUUIDEntity {
 	@Column({ type: 'uuid', nullable: true })
 	fileBucketId: string | null;
 
-	@Column({ type: 'uuid', nullable: true })
-	ownerId: string | null;
+	@Column({ type: 'uuid' })
+	ownerId: string;
 
 	@Column({ type: 'uuid', nullable: true })
 	fileNodeParentId: string | null;
@@ -50,7 +50,7 @@ export class FileNode extends BaseUUIDEntity {
 
 	@ManyToOne(() => User)
 	@JoinColumn({ name: 'owner_id' })
-	owner?: User;
+	owner: User;
 
 	@TreeParent()
 	@JoinColumn({ name: 'file_node_parent_id' })

@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AppEventType } from 'src/app-event/enum/app-event.enum';
 import { Permission } from 'src/permission/entities/permission.entity';
 import { PermissionAction } from 'src/permission/enums/permission.enum';
 import { RolePermission } from 'src/role-permission/entities/role-permission.entity';
@@ -8,31 +9,30 @@ import { Role } from 'src/role/entities/role.entity';
 import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { User } from 'src/users/entities/user.entity';
 import { hashPass } from 'src/users/util/user.ulti';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
-export class OrmInitService implements OnModuleInit {
-	private readonly logger = new Logger(OrmInitService.name);
+export class AppInitService implements OnApplicationBootstrap {
+	private readonly logger = new Logger(AppInitService.name);
+	private readonly userRepo: Repository<User>;
+	private readonly userRoleRepo: Repository<UserRole>;
+	private readonly roleRepo: Repository<Role>;
+	private readonly permissionRepo: Repository<Permission>;
+	private readonly rolePermissionRepo: Repository<RolePermission>;
+
 	constructor(
 		private readonly configService: ConfigService,
+		private readonly dataSource: DataSource,
+		private readonly eventEmitter: EventEmitter2,
+	) {
+		this.userRepo = this.dataSource.getRepository(User);
+		this.userRoleRepo = this.dataSource.getRepository(UserRole);
+		this.roleRepo = this.dataSource.getRepository(Role);
+		this.permissionRepo = this.dataSource.getRepository(Permission);
+		this.rolePermissionRepo = this.dataSource.getRepository(RolePermission);
+	}
 
-		@InjectRepository(User)
-		private readonly userRepo: Repository<User>,
-
-		@InjectRepository(UserRole)
-		private readonly userRoleRepo: Repository<UserRole>,
-
-		@InjectRepository(Role)
-		private readonly roleRepo: Repository<Role>,
-
-		@InjectRepository(Permission)
-		private readonly permissionRepo: Repository<Permission>,
-
-		@InjectRepository(RolePermission)
-		private readonly rolePermissionRepo: Repository<RolePermission>,
-	) {}
-
-	async onModuleInit() {
+	async onApplicationBootstrap() {
 		await this.initUser();
 		await this.initRoles();
 		await this.initPermissions();
@@ -58,7 +58,9 @@ export class OrmInitService implements OnModuleInit {
 				email: this.configService.get<string>('DEFAULT_EMAIL'),
 			});
 
-			return await this.userRepo.save(entity);
+			const user = await this.userRepo.save(entity);
+			this.eventEmitter.emit(AppEventType.USER_CREATED, user.id);
+			return user;
 		}
 
 		this.logger.log('Skip init user');

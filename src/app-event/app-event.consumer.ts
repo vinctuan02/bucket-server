@@ -10,6 +10,8 @@ export class AppEventConsumer {
 
 	@OnEvent(AppEventType.USER_CREATED)
 	async handleUserCreatedEvent(userId: string) {
+		this.logger.verbose('AppEventType.USER_CREATED: ', userId);
+
 		try {
 			await this.fileManagerSv.createRootFolder(userId);
 		} catch (error) {

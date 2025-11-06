@@ -6,7 +6,6 @@ import { RolePermission } from 'src/role-permission/entities/role-permission.ent
 import { Role } from 'src/role/entities/role.entity';
 import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { User } from 'src/users/entities/user.entity';
-import { OrmInitService } from './services/orm-init.service';
 import { OrmUtilsCreateQb } from './services/orm-utils.create-qb';
 import { OrmUtilsJoin } from './services/orm-utils.join';
 import { OrmUtilsSelect } from './services/orm-utils.select';
@@ -23,13 +22,7 @@ import { OrmUtilsWhere } from './services/orm-utils.where';
 			FileNode,
 		]),
 	],
-	providers: [
-		OrmUtilsCreateQb,
-		OrmUtilsJoin,
-		OrmUtilsSelect,
-		OrmUtilsWhere,
-		OrmInitService,
-	],
+	providers: [OrmUtilsCreateQb, OrmUtilsJoin, OrmUtilsSelect, OrmUtilsWhere],
 	exports: [OrmUtilsCreateQb, OrmUtilsJoin, OrmUtilsSelect, OrmUtilsWhere],
 })
 export class OrmUtilsModule {}

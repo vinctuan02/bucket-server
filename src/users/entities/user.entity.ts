@@ -2,7 +2,8 @@
 import { BaseUserUUIDEntity } from 'src/common/entities/common.entity';
 import { FileNode } from 'src/file-node/entities/file-node.entity';
 import { UserRole } from 'src/user-role/entities/user-role.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { UserStorage } from 'src/user-storage/entities/user-storage.entity';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 
 @Entity('users')
 export class User extends BaseUserUUIDEntity {
@@ -32,4 +33,7 @@ export class User extends BaseUserUUIDEntity {
 
 	@OneToMany(() => FileNode, (f) => f.owner)
 	fileNodes: FileNode[];
+
+	@OneToOne(() => UserStorage, (us) => us.user)
+	userStorage: UserStorage;
 }

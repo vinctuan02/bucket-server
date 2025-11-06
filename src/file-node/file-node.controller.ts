@@ -29,8 +29,8 @@ export class FileManagerController {
 	}
 
 	@Post('file')
-	async createFile(@Body() dto: CreateFileDto) {
-		const data = await this.service.createFile(dto);
+	async createFile(@Body() dto: CreateFileDto, @Req() req: Request) {
+		const data = await this.service.createFile({ dto, req });
 		return new ResponseSuccess({ data });
 	}
 
