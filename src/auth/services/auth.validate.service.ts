@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ResponseError } from 'src/common/dto/common.response-dto';
 import { UsersService } from 'src/users/services/user.service';
 import { comparePass } from 'src/users/util/user.ulti';
+import { AuthResponseError } from '../constant/auth.const';
 import { LoginDto } from '../dto/auth.dto';
 
 @Injectable()
@@ -11,16 +11,14 @@ export class AuthValidateService {
 	async ensureEmailNotExists(email: string): Promise<void> {
 		const isExists = await this.userService.findByEmail(email);
 		if (isExists) {
-			throw new ResponseError({
-				message: `Email ${email} already exists`,
-			});
+			throw AuthResponseError.EMAIL_ALREADY_EXISTS(email);
 		}
 	}
 
 	async ensureEmailExists(email: string) {
 		const entity = await this.userService.findByEmail(email);
 		if (!entity) {
-			throw new ResponseError({ message: `Email ${email} not found` });
+			throw AuthResponseError.EMAIL_NOT_FOUND(email);
 		}
 
 		return entity;
@@ -30,8 +28,7 @@ export class AuthValidateService {
 		const user = await this.ensureEmailExists(email);
 		const isMatch = await comparePass(password, user?.password ?? '');
 
-		if (!isMatch)
-			throw new ResponseError({ message: 'Invalid credentials' });
+		if (!isMatch) throw AuthResponseError.INVALID_CREDENTIALS();
 
 		return await this.userService.findOneWithPermissions(user.id);
 	}
