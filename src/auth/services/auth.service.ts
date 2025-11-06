@@ -183,6 +183,11 @@ export class AuthService {
 		return user;
 	}
 
+	async getProfileWithPermissions(userId: string) {
+		const user = await this.usersService.findOneWithPermissions(userId);
+		return user;
+	}
+
 	private generateTokens(input: Omit<IAuthPayload, 'type'>) {
 		const accessToken = this.generateAccessToken(input);
 		const refreshToken = this.generateRefreshToken(input);

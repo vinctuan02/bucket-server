@@ -7,6 +7,7 @@ export class OrmFilterDto extends BaseQueryDto {
 	keywordsFileNode?: string[];
 
 	fileNodeParentId?: string;
+	fileNodeIsDelete?: boolean;
 
 	constructor(partial?: Partial<OrmFilterDto>) {
 		super();

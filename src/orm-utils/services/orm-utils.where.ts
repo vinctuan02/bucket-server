@@ -26,6 +26,7 @@ export class OrmUtilsWhere {
 			orderBy,
 
 			fileNodeParentId,
+			fileNodeIsDelete,
 		} = filter;
 
 		qb.orderBy(fieldOrder, orderBy).take(pageSize).skip(skip);
@@ -35,6 +36,7 @@ export class OrmUtilsWhere {
 		this.andWhereRoleKeywords({ qb, keywords: keywordsRole });
 		this.andWhereFileNodeKeywords({ qb, keywords: keywordsFileNode });
 		this.andWhereFileNodeParentId({ qb, fileNodeParentId });
+		this.andWhereFileNodeIsDelete({ qb, fileNodeIsDelete });
 	}
 
 	andWhereUserKeywords({
@@ -210,6 +212,20 @@ export class OrmUtilsWhere {
 		if (fileNodeParentId) {
 			qb.andWhere(`${FileNodeFM.fileNodeParentId} = :fileNodeParentId`, {
 				fileNodeParentId,
+			});
+		}
+	}
+
+	andWhereFileNodeIsDelete({
+		fileNodeIsDelete,
+		qb,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		fileNodeIsDelete?: boolean;
+	}) {
+		if (fileNodeIsDelete !== undefined) {
+			qb.andWhere(`${FileNodeFM.isDelete} = :fileNodeIsDelete`, {
+				fileNodeIsDelete,
 			});
 		}
 	}

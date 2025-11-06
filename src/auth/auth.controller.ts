@@ -103,4 +103,12 @@ export class AuthController {
 		const user = await this.authService.getProfile(req.user.userId);
 		return new ResponseSuccess({ data: user });
 	}
+
+	@Get('me/detail')
+	async getProfileWithPermissions(@Req() req) {
+		const user = await this.authService.getProfileWithPermissions(
+			req.user.userId,
+		);
+		return new ResponseSuccess({ data: user });
+	}
 }

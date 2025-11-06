@@ -134,8 +134,8 @@ export class FileManagerService {
 		req: Request;
 	}) {
 		filter.fileNodeParentId = id;
+		filter.isDelete = false;
 		const data = await this.getList({ req, filter });
-
 		return data;
 	}
 
@@ -190,11 +190,12 @@ export class FileManagerService {
 		req: Request;
 		filter: GetlistFileNodeDto;
 	}) {
-		const { fileNodeParentId, keywords } = filter;
+		const { fileNodeParentId, keywords, isDelete } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
 		const filterOrm = new OrmFilterDto({
 			fileNodeParentId,
 			keywordsFileNode: keywords,
+			fileNodeIsDelete: isDelete,
 			...filter,
 		});
 
@@ -346,16 +347,29 @@ export class FileManagerService {
 		}
 	}
 
-	private async validateUniqueConstraint(input: {
+	private async validateUniqueConstraint({
+		fileNodeParentId,
+		name,
+		type,
+		isDelete = false,
+	}: {
 		fileNodeParentId: string;
 		name: string;
 		type: TYPE_FILE_NODE;
+		isDelete?: boolean;
 	}) {
-		const isExists = await this.fileNodeRepo.findOne({ where: input });
+		const isExists = await this.fileNodeRepo.findOne({
+			where: {
+				fileNodeParentId,
+				name,
+				type,
+				isDelete,
+			},
+		});
 
 		if (isExists) {
 			throw new ResponseError({
-				message: `A ${input.type.toLowerCase()} name "${input.name}" already exists in this folder.`,
+				message: `File or folder already exists`,
 			});
 		}
 	}

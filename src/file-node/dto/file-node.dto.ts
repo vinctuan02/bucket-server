@@ -71,4 +71,7 @@ export class GetlistFileNodeDto extends BaseQueryDto {
 
 	@IsOptional()
 	orderBy: OrderDirection = OrderDirection.ASC;
+
+	@IsOptional()
+	isDelete?: boolean;
 }
