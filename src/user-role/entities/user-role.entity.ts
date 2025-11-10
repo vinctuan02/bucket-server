@@ -11,11 +11,11 @@ export class UserRole extends BaseUserUUIDEntity {
 	@Column({ type: 'uuid' })
 	roleId: string;
 
-	@ManyToOne(() => User)
+	@ManyToOne(() => User, { onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'user_id' })
 	user: User;
 
-	@ManyToOne(() => Role)
+	@ManyToOne(() => Role, { onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'role_id' })
 	role: Role;
 }

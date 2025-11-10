@@ -18,4 +18,15 @@ export class AppEventConsumer {
 			this.logger.error(error.message);
 		}
 	}
+
+	@OnEvent(AppEventType.USER_DELETE)
+	async handleUserDeleteEvent(userId: string) {
+		this.logger.verbose('AppEventType.USER_DELETE: ', userId);
+
+		try {
+			await this.fileManagerSv.deleteByUserId(userId);
+		} catch (error) {
+			this.logger.error(error.message);
+		}
+	}
 }

@@ -381,6 +381,11 @@ export class FileManagerService {
 		}
 	}
 
+	async deleteByUserId(userId: string) {
+		await this.fileNodeRepo.delete({ ownerId: userId });
+		await this.userStorageService.deleteByUserId(userId);
+	}
+
 	// private
 	private async isFolder(parentId: string) {
 		const entity = await this.findOne(parentId);

@@ -1,11 +1,13 @@
 import { FileBucket } from 'src/bucket/entities/bucket-file.entity';
 import { BaseUUIDEntity } from 'src/common/entities/common.entity';
+import { Share } from 'src/share/entities/share.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
 	Column,
 	Entity,
 	JoinColumn,
 	ManyToOne,
+	OneToMany,
 	OneToOne,
 	Tree,
 	TreeChildren,
@@ -51,6 +53,9 @@ export class FileNode extends BaseUUIDEntity {
 	@ManyToOne(() => User)
 	@JoinColumn({ name: 'owner_id' })
 	owner: User;
+
+	@OneToMany(() => Share, (share) => share.fileNode)
+	shares: Share[];
 
 	@TreeParent()
 	@JoinColumn({ name: 'file_node_parent_id' })

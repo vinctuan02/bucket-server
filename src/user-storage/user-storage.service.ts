@@ -86,4 +86,8 @@ export class UserStorageService {
 
 		return storage;
 	}
+
+	async deleteByUserId(userId: string) {
+		await this.userStorageRepo.delete({ userId });
+	}
 }

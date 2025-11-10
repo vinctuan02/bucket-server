@@ -108,6 +108,7 @@ export class UsersService {
 	}
 
 	async remove(id: string): Promise<void> {
+		await this.eventEmitter.emitAsync(AppEventType.USER_DELETE, id);
 		await this.userRepo.delete(id);
 	}
 }

@@ -16,6 +16,7 @@ import { NotificationModule } from './notification/notification.module';
 import { PermissionModule } from './permission/permission.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { RoleModule } from './role/role.module';
+import { ShareModule } from './share/share.module';
 import { UserRoleModule } from './user-role/user-role.module';
 import { UserStorageModule } from './user-storage/user-storage.module';
 import { UsersModule } from './users/user.module';
@@ -42,6 +43,8 @@ import { UsersModule } from './users/user.module';
 		PermissionModule,
 		UserRoleModule,
 		RolePermissionModule,
+
+		ShareModule,
 		FileNodeModule,
 		UserStorageModule,
 	],
