@@ -8,6 +8,8 @@ export class OrmFilterDto extends BaseQueryDto {
 
 	fileNodeParentId?: string;
 	fileNodeIsDelete?: boolean;
+	shareFileNodeId?: string;
+	fileNodeId?: string;
 
 	constructor(partial?: Partial<OrmFilterDto>) {
 		super();

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import dayjs from 'dayjs';
 import { DateFormat } from '../enums/common.enum';
 
@@ -21,4 +22,9 @@ export function getValuesOfEnum<T extends Record<string, string>>(
 
 export function getUserIdFromReq(req: any) {
 	return req.user.userId as string;
+}
+
+export function generateShareLinkToken(): string {
+	const bytes = randomBytes(24);
+	return bytes.toString('base64url');
 }

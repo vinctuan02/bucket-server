@@ -8,6 +8,20 @@ import { SelectQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class OrmUtilsSelect {
+	select({ qb, select }: { qb: SelectQueryBuilder<any>; select: string[] }) {
+		qb.select(select);
+	}
+
+	addSelect({
+		qb,
+		select,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		select: string[];
+	}) {
+		qb.addSelect(select);
+	}
+
 	selectUser({
 		qb,
 		fields,
@@ -42,5 +56,25 @@ export class OrmUtilsSelect {
 
 	addSelectPermissionSimple(qb: SelectQueryBuilder<any>) {
 		qb.addSelect(PermissionFieldsSimple);
+	}
+
+	selectShare({
+		qb,
+		select,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		select: string[];
+	}) {
+		qb.select(select);
+	}
+
+	addSelectSharePermissions({
+		qb,
+		select,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		select: string[];
+	}) {
+		qb.addSelect(select);
 	}
 }

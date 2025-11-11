@@ -5,4 +5,6 @@ export enum Alias {
 	ROLE_PERMISSION = 'rolePermission',
 	PERMISSION = 'permission',
 	fileNode = 'fileNode',
+	share = 'share',
+	sharePermission = 'sharePermission',
 }

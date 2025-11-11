@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FileNodeFM } from 'src/file-node/fm/file-node.fm';
 import { PermissionFM } from 'src/permission/enums/permission.enum';
+import { ShareFm } from 'src/share/fm/share.fm';
 import { UserFM } from 'src/users/enum/user.enum';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
 import { RoleFM } from '../../role/constant/orm.role.fm';
@@ -27,6 +28,9 @@ export class OrmUtilsWhere {
 
 			fileNodeParentId,
 			fileNodeIsDelete,
+
+			shareFileNodeId,
+			fileNodeId,
 		} = filter;
 
 		qb.orderBy(fieldOrder, orderBy).take(pageSize).skip(skip);
@@ -37,6 +41,7 @@ export class OrmUtilsWhere {
 		this.andWhereFileNodeKeywords({ qb, keywords: keywordsFileNode });
 		this.andWhereFileNodeParentId({ qb, fileNodeParentId });
 		this.andWhereFileNodeIsDelete({ qb, fileNodeIsDelete });
+		this.andWhereShareFileNodeId({ qb, fileNodeId: shareFileNodeId });
 	}
 
 	andWhereUserKeywords({
@@ -202,6 +207,20 @@ export class OrmUtilsWhere {
 		}
 	}
 
+	andWhereFileNodeId({
+		fileNodeId,
+		qb,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		fileNodeId?: string;
+	}) {
+		if (fileNodeId !== undefined) {
+			qb.andWhere(`${FileNodeFM.id} = :fileNodeId`, {
+				fileNodeId,
+			});
+		}
+	}
+
 	andWhereFileNodeParentId({
 		fileNodeParentId,
 		qb,
@@ -226,6 +245,34 @@ export class OrmUtilsWhere {
 		if (fileNodeIsDelete !== undefined) {
 			qb.andWhere(`${FileNodeFM.isDelete} = :fileNodeIsDelete`, {
 				fileNodeIsDelete,
+			});
+		}
+	}
+
+	andWhereShareId({
+		shareId,
+		qb,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		shareId?: string;
+	}) {
+		if (shareId !== undefined) {
+			qb.andWhere(`${ShareFm.id} = :shareId`, {
+				shareId,
+			});
+		}
+	}
+
+	andWhereShareFileNodeId({
+		fileNodeId,
+		qb,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		fileNodeId?: string;
+	}) {
+		if (fileNodeId !== undefined) {
+			qb.andWhere(`${ShareFm.fileNodeId} = :fileNodeId`, {
+				fileNodeId,
 			});
 		}
 	}
