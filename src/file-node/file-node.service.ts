@@ -8,7 +8,7 @@ import type { Request } from 'express';
 import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
-import { getUserIdFromReq } from 'src/common/util/common.util';
+import { parseReq } from 'src/common/util/common.util';
 import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
@@ -46,7 +46,7 @@ export class FileManagerService {
 	// create
 	async createFolder({ req, dto }: { req: Request; dto: CreateFolderDto }) {
 		const { fileNodeParentId, name } = dto;
-		const userId = getUserIdFromReq(req);
+		const { userId } = parseReq(req);
 
 		const parent = await this.validateAndGetParent(fileNodeParentId);
 		if (fileNodeParentId) {
@@ -82,7 +82,7 @@ export class FileManagerService {
 
 	async createFile({ dto, req }: { dto: CreateFileDto; req: Request }) {
 		const { name, fileNodeParentId, fileMetadata } = dto;
-		const userId = getUserIdFromReq(req);
+		const { userId } = parseReq(req);
 
 		const parent = await this.validateAndGetParent(fileNodeParentId);
 
@@ -228,16 +228,39 @@ export class FileManagerService {
 		req: Request;
 		filter: GetlistFileNodeDto;
 	}) {
+		const { userId, roles } = parseReq(req);
+
+		// if (!roles.includes('Admin')) {
+
+		// }
+
 		const { fileNodeParentId, keywords, isDelete } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
-		const filterOrm = new OrmFilterDto({
-			fileNodeParentId,
-			keywordsFileNode: keywords,
-			fileNodeIsDelete: isDelete,
-			...filter,
-		});
+		// qb.leftJoinAndSelect(
+		// 	'file_node_closure',
+		// 	'fnc',
+		// 	'fnc.id_descendant = fileNode.id',
+		// );
 
-		this.whereUtils.applyFilter({ qb, filter: filterOrm });
+		qb.leftJoinAndSelect(
+			'file_node_permissions',
+			'fnp',
+			'fnp.file_node_id = fnc.id_ancestor AND fnp.user_id = :userId',
+			{ userId },
+		);
+
+		this.whereUtils.applyFilter({
+			qb,
+			filter: new OrmFilterDto({
+				fileNodeParentId,
+				keywordsFileNode: keywords,
+				fileNodeIsDelete: isDelete,
+				...filter,
+			}),
+		});
+		// qb.andWhere('fnp.can_view = true');
+
+		// console.log(qb.getQueryAndParameters());
 
 		const [items, totalItems] = await qb.getManyAndCount();
 		return new PageDto({ items, metadata: { ...filter, totalItems } });
@@ -258,7 +281,7 @@ export class FileManagerService {
 		req: Request;
 		filter: GetlistFileNodeDto;
 	}) {
-		const userId = getUserIdFromReq(req);
+		const { userId } = parseReq(req);
 
 		await this.createRootIfNotExists(userId);
 

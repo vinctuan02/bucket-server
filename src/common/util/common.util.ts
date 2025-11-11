@@ -20,8 +20,11 @@ export function getValuesOfEnum<T extends Record<string, string>>(
 	return Object.values(e).filter((v): v is string => typeof v === 'string');
 }
 
-export function getUserIdFromReq(req: any) {
-	return req.user.userId as string;
+export function parseReq(req: any) {
+	return {
+		userId: req.user.userId as string,
+		roles: req.user.roles as string[],
+	};
 }
 
 export function generateShareLinkToken(): string {

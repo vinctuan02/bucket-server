@@ -11,12 +11,12 @@ import { JwtAuthGuard } from './auth/guard/auth.guard';
 import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
 import { validationSchema } from './common/config/common.validate-env';
+import { FileNodePermissionModule } from './file-node-permission/file-node-permission.module';
 import { FileNodeModule } from './file-node/file-node.module';
 import { NotificationModule } from './notification/notification.module';
 import { PermissionModule } from './permission/permission.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { RoleModule } from './role/role.module';
-import { ShareModule } from './share/share.module';
 import { UserRoleModule } from './user-role/user-role.module';
 import { UserStorageModule } from './user-storage/user-storage.module';
 import { UsersModule } from './users/user.module';
@@ -44,9 +44,9 @@ import { UsersModule } from './users/user.module';
 		UserRoleModule,
 		RolePermissionModule,
 
-		ShareModule,
 		FileNodeModule,
 		UserStorageModule,
+		FileNodePermissionModule,
 	],
 	controllers: [AppController],
 	providers: [

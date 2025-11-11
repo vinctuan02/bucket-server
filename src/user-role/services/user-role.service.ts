@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Role } from 'src/role/entities/role.entity';
 import { Repository } from 'typeorm';
 import { UserRole } from '../entities/user-role.entity';
 
@@ -10,6 +11,8 @@ export class UserRoleService {
 	constructor(
 		@InjectRepository(UserRole)
 		private readonly userRoleRepo: Repository<UserRole>,
+		@InjectRepository(Role)
+		private readonly roleRepo: Repository<UserRole>,
 	) {}
 
 	async createSafe(input: { userId: string; roleId: string }) {

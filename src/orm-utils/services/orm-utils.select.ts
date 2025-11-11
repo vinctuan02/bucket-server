@@ -57,24 +57,4 @@ export class OrmUtilsSelect {
 	addSelectPermissionSimple(qb: SelectQueryBuilder<any>) {
 		qb.addSelect(PermissionFieldsSimple);
 	}
-
-	selectShare({
-		qb,
-		select,
-	}: {
-		qb: SelectQueryBuilder<any>;
-		select: string[];
-	}) {
-		qb.select(select);
-	}
-
-	addSelectSharePermissions({
-		qb,
-		select,
-	}: {
-		qb: SelectQueryBuilder<any>;
-		select: string[];
-	}) {
-		qb.addSelect(select);
-	}
 }
