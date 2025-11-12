@@ -15,6 +15,28 @@ export class FileNodePermissionService {
 		private fileNodePermissionRepo: Repository<FileNodePermission>,
 	) {}
 
+	async generateChildPermissionsFromParent({
+		fileNodeChildrenId,
+		fileNodeParentId,
+	}: {
+		fileNodeParentId: string;
+		fileNodeChildrenId: string;
+	}) {
+		const permissionsParent = await this.findByFileNode(fileNodeParentId);
+
+		const newPermissions = permissionsParent.map((i) => ({
+			fileNodeId: fileNodeChildrenId,
+			userId: i.userId,
+			canView: i.canView,
+			canEdit: i.canEdit,
+			canDelete: i.canDelete,
+			canUpload: i.canUpload,
+			canShare: i.canShare,
+		}));
+
+		await this.fileNodePermissionRepo.save(newPermissions);
+	}
+
 	async upsert({
 		userId,
 		dto,
