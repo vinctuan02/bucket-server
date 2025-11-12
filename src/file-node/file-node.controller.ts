@@ -6,12 +6,15 @@ import {
 	Get,
 	Param,
 	Post,
+	Put,
 	Query,
 	Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
+import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
 import {
+	BulkUpdateFileNodePermissionDto,
 	CreateFileDto,
 	CreateFolderDto,
 	GetlistFileNodeDto,
@@ -34,11 +37,33 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
-	// @Post(':id/submit-file')
-	// async submitFile(@Body() dto: CreateFileDto) {
-	// 	const data = await this.service.createFile(dto);
-	// 	return new ResponseSuccess({ data });
-	// }
+	@Post(':id/permission')
+	async upsertPemissions(
+		@Param('id') fileNodeId: string,
+		@Body() dto: UpsertFileNodePermissionDto,
+		@Req() req: Request,
+	) {
+		const data = await this.service.upsertPemissions({
+			fileNodeId,
+			dto,
+			req,
+		});
+		return new ResponseSuccess({ data });
+	}
+
+	@Put(':id/bulk/permission')
+	async bulkUpdateFileNodePermission(
+		@Param('id') fileNodeId: string,
+		@Body() dto: BulkUpdateFileNodePermissionDto,
+		@Req() req: Request,
+	) {
+		const data = await this.service.bulkUpdateFileNodePermission({
+			fileNodeId,
+			dto,
+			req,
+		});
+		return new ResponseSuccess({ data });
+	}
 
 	@Get()
 	async getList(@Req() req: Request, @Query() filter: GetlistFileNodeDto) {
@@ -73,6 +98,12 @@ export class FileManagerController {
 	@Get(':id')
 	async findOne(@Param('id') id: string) {
 		const data = await this.service.findOne(id);
+		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id/with-permission')
+	async findOneWithPermission(@Param('id') id: string) {
+		const data = await this.service.findOneWithPermission(id);
 		return new ResponseSuccess({ data });
 	}
 

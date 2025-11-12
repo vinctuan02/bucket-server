@@ -10,8 +10,8 @@ import {
 import { GetUserId } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import {
-	CreateFileNodePermissionDto,
 	UpdateFileNodePermissionDto,
+	UpsertFileNodePermissionDto,
 } from './dto/file-node-permission.dto';
 import { FileNodePermissionService } from './file-node-permission.service';
 
@@ -22,9 +22,9 @@ export class FileNodePermissionController {
 	@Post()
 	async create(
 		@GetUserId() userId: string,
-		@Body() dto: CreateFileNodePermissionDto,
+		@Body() dto: UpsertFileNodePermissionDto,
 	) {
-		const data = await this.service.create(userId, dto);
+		const data = await this.service.upsert({ userId, dto });
 		return new ResponseSuccess({ data });
 	}
 

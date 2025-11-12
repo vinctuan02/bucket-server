@@ -1,7 +1,8 @@
 import { IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { ShareType } from '../enum/file-node-permission.enum';
 
-export class CreateFileNodePermissionDto {
+export class UpsertFileNodePermissionDto {
+	@IsOptional()
 	@IsUUID()
 	fileNodeId: string;
 

@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { Repository } from 'typeorm';
 import {
-	CreateFileNodePermissionDto,
 	UpdateFileNodePermissionDto,
+	UpsertFileNodePermissionDto,
 } from './dto/file-node-permission.dto';
 import { FileNodePermission } from './entities/file-node-permission.entity';
 
@@ -15,12 +15,29 @@ export class FileNodePermissionService {
 		private fileNodePermissionRepo: Repository<FileNodePermission>,
 	) {}
 
-	async create(userId: string, data: CreateFileNodePermissionDto) {
+	async upsert({
+		userId,
+		dto,
+	}: {
+		userId: string;
+		dto: UpsertFileNodePermissionDto;
+	}) {
 		const perm = this.fileNodePermissionRepo.create({
-			...data,
+			...dto,
 			sharedById: userId,
 		});
-		return this.fileNodePermissionRepo.save(perm);
+
+		await this.fileNodePermissionRepo.upsert(perm, [
+			'fileNodeId',
+			'userId',
+		]);
+
+		return this.fileNodePermissionRepo.findOne({
+			where: {
+				fileNodeId: dto.fileNodeId ?? '',
+				userId: dto.userId ?? '',
+			},
+		});
 	}
 
 	async findOne(id: string) {

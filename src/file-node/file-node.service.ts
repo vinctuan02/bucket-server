@@ -9,14 +9,18 @@ import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
 import { parseReq } from 'src/common/util/common.util';
+import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
+import { FileNodePermission } from 'src/file-node-permission/entities/file-node-permission.entity';
+import { FileNodePermissionService } from 'src/file-node-permission/file-node-permission.service';
 import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
-import { LessThanOrEqual, TreeRepository } from 'typeorm';
+import { Brackets, LessThanOrEqual, TreeRepository } from 'typeorm';
 import { FileNodeResponseError } from './const/file-node.const';
 import {
+	BulkUpdateFileNodePermissionDto,
 	CreateFileDto,
 	CreateFolderDto,
 	GetlistFileNodeDto,
@@ -41,6 +45,7 @@ export class FileManagerService {
 		private readonly selectUtils: OrmUtilsSelect,
 
 		private readonly userStorageService: UserStorageService,
+		private readonly fileNodePermisisonSv: FileNodePermissionService,
 	) {}
 
 	// create
@@ -121,9 +126,91 @@ export class FileManagerService {
 		return { ...saved, uploadUrl: fileBucketDb.uploadUrl };
 	}
 
+	async upsertPemissions({
+		dto,
+		req,
+		fileNodeId,
+	}: {
+		dto: UpsertFileNodePermissionDto;
+		req: Request;
+		fileNodeId: string;
+	}) {
+		const result: FileNodePermission[] = [];
+		const { userId } = parseReq(req);
+		const fN = await this.findOneWithChildren(fileNodeId);
+
+		for (const child of fN.fileNodeChildrens) {
+			const childPerms = await this.upsertPemissions({
+				dto: { ...dto, fileNodeId: child.id },
+				req,
+				fileNodeId: child.id,
+			});
+			result.push(...childPerms);
+		}
+
+		const perm = await this.fileNodePermisisonSv.upsert({
+			userId,
+			dto: { ...dto, fileNodeId },
+		});
+
+		if (perm) result.push(perm);
+		return result;
+	}
+
+	async bulkUpdateFileNodePermission({
+		dto,
+		req,
+		fileNodeId,
+	}: {
+		dto: BulkUpdateFileNodePermissionDto;
+		req: Request;
+		fileNodeId: string;
+	}) {
+		const { upsert, remove } = dto;
+		const resultUpsert: FileNodePermission[] = [];
+
+		if (upsert) {
+			for (const dtoUpsert of upsert) {
+				const result = await this.upsertPemissions({
+					dto: dtoUpsert,
+					fileNodeId,
+					req,
+				});
+
+				resultUpsert.push(...result);
+			}
+		}
+
+		if (remove) {
+			for (const r of remove) {
+				await this.fileNodePermisisonSv.remove(r);
+			}
+		}
+
+		return {
+			resultUpsert,
+			resultRemove: remove,
+		};
+	}
+
 	// read
 	async findOne(id: string) {
 		const entity = await this.fileNodeRepo.findOne({ where: { id } });
+
+		if (!entity) {
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
+		}
+
+		return entity;
+	}
+
+	async findOneWithPermission(id: string) {
+		const entity = await this.fileNodeRepo.findOne({
+			where: { id },
+			relations: {
+				fileNodePermissions: true,
+			},
+		});
 
 		if (!entity) {
 			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
@@ -230,24 +317,8 @@ export class FileManagerService {
 	}) {
 		const { userId, roles } = parseReq(req);
 
-		// if (!roles.includes('Admin')) {
-
-		// }
-
 		const { fileNodeParentId, keywords, isDelete } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
-		// qb.leftJoinAndSelect(
-		// 	'file_node_closure',
-		// 	'fnc',
-		// 	'fnc.id_descendant = fileNode.id',
-		// );
-
-		qb.leftJoinAndSelect(
-			'file_node_permissions',
-			'fnp',
-			'fnp.file_node_id = fnc.id_ancestor AND fnp.user_id = :userId',
-			{ userId },
-		);
 
 		this.whereUtils.applyFilter({
 			qb,
@@ -258,9 +329,18 @@ export class FileManagerService {
 				...filter,
 			}),
 		});
-		// qb.andWhere('fnp.can_view = true');
 
-		// console.log(qb.getQueryAndParameters());
+		if (!roles.includes('Admin')) {
+			qb.leftJoin('fileNode.fileNodePermissions', 'fileNodePermission');
+			qb.andWhere(
+				new Brackets((qb1) => {
+					qb1.where(
+						'fileNodePermission.canView = true AND fileNodePermission.userId = :userId',
+						{ userId },
+					).orWhere('fileNode.ownerId = :userId', { userId });
+				}),
+			);
+		}
 
 		const [items, totalItems] = await qb.getManyAndCount();
 		return new PageDto({ items, metadata: { ...filter, totalItems } });

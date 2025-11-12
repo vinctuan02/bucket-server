@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import {
+	IsArray,
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
@@ -12,6 +13,7 @@ import {
 } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
 import { OrderDirection } from 'src/common/enums/common.enum';
+import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
 import { FileNodeFM } from '../fm/file-node.fm';
 
 export class CreateFolderDto {
@@ -74,4 +76,17 @@ export class GetlistFileNodeDto extends BaseQueryDto {
 
 	@IsOptional()
 	isDelete?: boolean;
+}
+
+export class BulkUpdateFileNodePermissionDto {
+	@IsOptional()
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => UpsertFileNodePermissionDto)
+	upsert?: UpsertFileNodePermissionDto[];
+
+	@IsArray()
+	@IsUUID('all', { each: true })
+	@IsOptional()
+	remove?: string[];
 }
