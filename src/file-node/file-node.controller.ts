@@ -107,6 +107,12 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Get(':id/permissions')
+	async getPermissions(@Param('id') id: string) {
+		const data = await this.service.getPermissions(id);
+		return new ResponseSuccess({ data });
+	}
+
 	@Get(':id/childrens')
 	async getChildrens(
 		@Param('id') id: string,

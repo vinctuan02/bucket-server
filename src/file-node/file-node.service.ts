@@ -235,6 +235,21 @@ export class FileManagerService {
 		return entity;
 	}
 
+	async getPermissions(id: string) {
+		const entity = await this.fileNodeRepo.findOne({
+			where: { id },
+			relations: {
+				fileNodePermissions: true,
+			},
+		});
+
+		if (!entity) {
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
+		}
+
+		return entity.fileNodePermissions;
+	}
+
 	async getFile(id: string) {
 		const entity = await this.fileNodeRepo.findOne({
 			where: { id, type: TYPE_FILE_NODE.FILE },
@@ -346,7 +361,7 @@ export class FileManagerService {
 			}),
 		});
 
-		if (!roles?.includes('Admin')) {
+		if (roles && !roles.includes('Admin')) {
 			qb.leftJoin('fileNode.fileNodePermissions', 'fileNodePermission');
 			qb.andWhere(
 				new Brackets((qb1) => {

@@ -1,6 +1,7 @@
 // share-link.controller.ts
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { GetUserId } from 'src/common/decorators/common.decorator';
+import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import { CreateShareLinkDto } from './dto/share-link.dto';
 import { ShareLinkService } from './share-link.service';
 
@@ -10,7 +11,8 @@ export class ShareLinkController {
 
 	@Post()
 	async create(@GetUserId() userId: string, @Body() dto: CreateShareLinkDto) {
-		return await this.service.create({ userId, dto });
+		const data = await this.service.create({ userId, dto });
+		return new ResponseSuccess({ data });
 	}
 
 	@Get(':token')
