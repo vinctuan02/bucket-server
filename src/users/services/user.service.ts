@@ -66,6 +66,18 @@ export class UsersService {
 		});
 	}
 
+	async getListSimple(query: GetListUserDto) {
+		const { page, pageSize } = query;
+
+		const { items, totalItems } =
+			await this.userQueryService.getListSimple(query);
+
+		return new PageDto({
+			items,
+			metadata: { totalItems, pageSize, page },
+		});
+	}
+
 	async findOne(id: string): Promise<User> {
 		const user = await this.userRepo.findOne({ where: { id } });
 		if (!user) throw new NotFoundException(`User ${id} not found`);

@@ -69,7 +69,16 @@ export class FileManagerService {
 			parent,
 		});
 
-		return this.fileNodeRepo.save(folder);
+		const result = await this.fileNodeRepo.save(folder);
+
+		if (fileNodeParentId) {
+			await this.fileNodePermisisonSv.generateChildPermissionsFromParent({
+				fileNodeParentId,
+				fileNodeChildrenId: folder.id,
+			});
+		}
+
+		return result;
 	}
 
 	async createRootFolder(userId: string) {
@@ -117,6 +126,13 @@ export class FileManagerService {
 		});
 
 		const saved = await this.fileNodeRepo.save(entity);
+
+		if (fileNodeParentId) {
+			await this.fileNodePermisisonSv.generateChildPermissionsFromParent({
+				fileNodeParentId,
+				fileNodeChildrenId: saved.id,
+			});
+		}
 
 		await this.userStorageService.increaseUsed({
 			userId,

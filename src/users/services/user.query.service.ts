@@ -73,6 +73,23 @@ export class UserQueryService {
 		return { items, totalItems };
 	}
 
+	async getListSimple(query: GetListUserDto) {
+		const { keywords } = query;
+
+		const qb = this.ormUtilsCreateQb.createUserQb();
+
+		const ormFilterDto = new OrmFilterDto({
+			keywordsUser: keywords,
+			...query,
+		});
+
+		this.ormUtilsWhere.applyFilter({ qb, filter: ormFilterDto });
+		this.ormUtilsSelect.select({ qb, select: USER_FIELDS_SIMPLE });
+
+		const [items, totalItems] = await qb.getManyAndCount();
+		return { items, totalItems };
+	}
+
 	async ensureEmailNotExists(email: string) {
 		const exists = await this.userRepo.findOne({ where: { email } });
 

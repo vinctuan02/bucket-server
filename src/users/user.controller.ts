@@ -29,6 +29,12 @@ export class UsersController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Get('simple')
+	async getListSimple(@Query() query: GetListUserDto) {
+		const data = await this.usersService.getListSimple(query);
+		return new ResponseSuccess({ data });
+	}
+
 	@Get(':id')
 	async findOne(@Param('id') id: string) {
 		const data = await this.usersService.findOneWithPermissions(id);
