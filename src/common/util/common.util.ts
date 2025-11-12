@@ -27,6 +27,21 @@ export function parseReq(req: any) {
 	};
 }
 
+// version 2: return undefine
+export function parseReq2(req?: any) {
+	if (req) {
+		return {
+			userId: req.user.userId as string,
+			roles: req.user.roles as string[],
+		};
+	}
+
+	return {
+		userId: undefined,
+		roles: undefined,
+	};
+}
+
 export function generateShareLinkToken(): string {
 	const bytes = randomBytes(24);
 	return bytes.toString('base64url');

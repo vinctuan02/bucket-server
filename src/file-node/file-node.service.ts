@@ -8,7 +8,7 @@ import type { Request } from 'express';
 import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
-import { parseReq } from 'src/common/util/common.util';
+import { parseReq, parseReq2 } from 'src/common/util/common.util';
 import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
 import { FileNodePermission } from 'src/file-node-permission/entities/file-node-permission.entity';
 import { FileNodePermissionService } from 'src/file-node-permission/file-node-permission.service';
@@ -254,7 +254,7 @@ export class FileManagerService {
 	}: {
 		id: string;
 		filter: GetlistFileNodeDto;
-		req: Request;
+		req?: Request;
 	}) {
 		filter.fileNodeParentId = id;
 		filter.isDelete = false;
@@ -328,10 +328,10 @@ export class FileManagerService {
 		req,
 		filter,
 	}: {
-		req: Request;
+		req?: Request;
 		filter: GetlistFileNodeDto;
 	}) {
-		const { userId, roles } = parseReq(req);
+		const { userId, roles } = parseReq2(req);
 
 		const { fileNodeParentId, keywords, isDelete } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
@@ -346,7 +346,7 @@ export class FileManagerService {
 			}),
 		});
 
-		if (!roles.includes('Admin')) {
+		if (!roles?.includes('Admin')) {
 			qb.leftJoin('fileNode.fileNodePermissions', 'fileNodePermission');
 			qb.andWhere(
 				new Brackets((qb1) => {

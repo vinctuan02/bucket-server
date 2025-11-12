@@ -15,8 +15,10 @@ import { FileNodePermissionModule } from './file-node-permission/file-node-permi
 import { FileNodeModule } from './file-node/file-node.module';
 import { NotificationModule } from './notification/notification.module';
 import { PermissionModule } from './permission/permission.module';
+import { PublicShareModule } from './public-share/public-share.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { RoleModule } from './role/role.module';
+import { ShareLinkModule } from './share-link/share-link.module';
 import { UserRoleModule } from './user-role/user-role.module';
 import { UserStorageModule } from './user-storage/user-storage.module';
 import { UsersModule } from './users/user.module';
@@ -44,9 +46,11 @@ import { UsersModule } from './users/user.module';
 		UserRoleModule,
 		RolePermissionModule,
 
+		PublicShareModule,
+		ShareLinkModule,
+		FileNodePermissionModule,
 		FileNodeModule,
 		UserStorageModule,
-		FileNodePermissionModule,
 	],
 	controllers: [AppController],
 	providers: [
