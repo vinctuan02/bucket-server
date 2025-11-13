@@ -29,9 +29,9 @@ export class FileNodePermissionService {
 			userId: i.userId,
 			canView: i.canView,
 			canEdit: i.canEdit,
-			canDelete: i.canDelete,
-			canUpload: i.canUpload,
-			canShare: i.canShare,
+			// canDelete: i.canDelete,
+			// canUpload: i.canUpload,
+			// canShare: i.canShare,
 		}));
 
 		await this.fileNodePermissionRepo.save(newPermissions);

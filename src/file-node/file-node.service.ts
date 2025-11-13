@@ -239,7 +239,9 @@ export class FileManagerService {
 		const entity = await this.fileNodeRepo.findOne({
 			where: { id },
 			relations: {
-				fileNodePermissions: true,
+				fileNodePermissions: {
+					user: true,
+				},
 			},
 		});
 

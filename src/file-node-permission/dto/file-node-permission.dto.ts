@@ -18,17 +18,17 @@ export class UpsertFileNodePermissionDto {
 	@IsOptional()
 	canEdit?: boolean = false;
 
-	@IsBoolean()
-	@IsOptional()
-	canDelete?: boolean = false;
+	// @IsBoolean()
+	// @IsOptional()
+	// canDelete?: boolean = false;
 
-	@IsBoolean()
-	@IsOptional()
-	canUpload?: boolean = false;
+	// @IsBoolean()
+	// @IsOptional()
+	// canUpload?: boolean = false;
 
-	@IsBoolean()
-	@IsOptional()
-	canShare?: boolean = false;
+	// @IsBoolean()
+	// @IsOptional()
+	// canShare?: boolean = false;
 
 	@IsEnum(ShareType)
 	@IsOptional()
@@ -48,17 +48,17 @@ export class UpdateFileNodePermissionDto {
 	@IsOptional()
 	canEdit?: boolean;
 
-	@IsBoolean()
-	@IsOptional()
-	canDelete?: boolean;
+	// @IsBoolean()
+	// @IsOptional()
+	// canDelete?: boolean;
 
-	@IsBoolean()
-	@IsOptional()
-	canUpload?: boolean;
+	// @IsBoolean()
+	// @IsOptional()
+	// canUpload?: boolean;
 
-	@IsBoolean()
-	@IsOptional()
-	canShare?: boolean;
+	// @IsBoolean()
+	// @IsOptional()
+	// canShare?: boolean;
 }
 
 export class GetEffectivePermissionDto {

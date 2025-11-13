@@ -23,14 +23,14 @@ export class FileNodePermission extends BaseUUIDEntity {
 	@Column({ name: 'can_edit', default: false })
 	canEdit: boolean;
 
-	@Column({ name: 'can_delete', default: false })
-	canDelete: boolean;
+	// @Column({ name: 'can_delete', default: false })
+	// canDelete: boolean;
 
-	@Column({ name: 'can_upload', default: false })
-	canUpload: boolean;
+	// @Column({ name: 'can_upload', default: false })
+	// canUpload: boolean;
 
-	@Column({ name: 'can_share', default: false })
-	canShare: boolean;
+	// @Column({ name: 'can_share', default: false })
+	// canShare: boolean;
 
 	// Metadata
 	@Column({
