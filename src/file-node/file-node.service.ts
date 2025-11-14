@@ -8,6 +8,7 @@ import type { Request } from 'express';
 import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
+import { CurrentUser } from 'src/common/interface/common.interface';
 import { parseReq, parseReq2 } from 'src/common/util/common.util';
 import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
 import { FileNodePermission } from 'src/file-node-permission/entities/file-node-permission.entity';
@@ -144,21 +145,21 @@ export class FileManagerService {
 
 	async upsertPemissions({
 		dto,
-		req,
+		currentUser,
 		fileNodeId,
 	}: {
 		dto: UpsertFileNodePermissionDto;
-		req: Request;
+		currentUser: CurrentUser;
 		fileNodeId: string;
 	}) {
 		const result: FileNodePermission[] = [];
-		const { userId } = parseReq(req);
+		const { userId } = currentUser;
 		const fN = await this.findOneWithChildren(fileNodeId);
 
 		for (const child of fN.fileNodeChildrens) {
 			const childPerms = await this.upsertPemissions({
 				dto: { ...dto, fileNodeId: child.id },
-				req,
+				currentUser,
 				fileNodeId: child.id,
 			});
 			result.push(...childPerms);
@@ -173,13 +174,17 @@ export class FileManagerService {
 		return result;
 	}
 
+	// người được chia sẻ chỉ được chia sẻ với quyền nhỏ hơn hoặc bằng quyền đã được chia sẻ
+	// upsert: isAdmin, isOwnerFileNode, isOwnerPermission
+	// delete: if isAdmin, isOwnerFileNode, isOwnerPermission
+
 	async bulkUpdateFileNodePermission({
 		dto,
-		req,
+		currentUser,
 		fileNodeId,
 	}: {
 		dto: BulkUpdateFileNodePermissionDto;
-		req: Request;
+		currentUser: CurrentUser;
 		fileNodeId: string;
 	}) {
 		const { upsert, remove } = dto;
@@ -190,7 +195,7 @@ export class FileManagerService {
 				const result = await this.upsertPemissions({
 					dto: dtoUpsert,
 					fileNodeId,
-					req,
+					currentUser,
 				});
 
 				resultUpsert.push(...result);
@@ -198,8 +203,14 @@ export class FileManagerService {
 		}
 
 		if (remove) {
-			for (const r of remove) {
-				await this.fileNodePermisisonSv.remove(r);
+			for (const permissionId of remove) {
+				if (
+					await this.fileNodePermisisonSv.canRemove({
+						currentUser,
+						permissionId,
+					})
+				)
+					await this.fileNodePermisisonSv.remove(permissionId);
 			}
 		}
 

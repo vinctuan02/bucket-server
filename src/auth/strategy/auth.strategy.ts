@@ -18,12 +18,20 @@ export class JwtStrategy extends PassportStrategy(JwtStrategyBase, 'jwt') {
 		});
 	}
 
-	async validate(payload: any) {
+	validate(payload: {
+		sub: string;
+		email: string;
+		roles: string[];
+		permissions: string[];
+		type: 'access_token';
+		iat: number;
+		exp: number;
+	}) {
 		return {
 			userId: payload.sub,
-			username: payload.username,
+			email: payload.email,
 			roles: payload.roles,
-			// permissions: payload.permissions,
+			permissions: payload.permissions,
 		};
 	}
 }
@@ -42,12 +50,12 @@ export class GoogleStrategy extends PassportStrategy(
 		});
 	}
 
-	async validate(
+	validate(
 		accessToken: string,
 		refreshToken: string,
 		profile: any,
 		done: VerifyCallback,
-	): Promise<any> {
+	) {
 		const { id, name, emails, photos } = profile;
 		const user = {
 			provider: 'google',

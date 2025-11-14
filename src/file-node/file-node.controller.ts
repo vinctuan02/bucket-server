@@ -10,8 +10,10 @@ import {
 	Query,
 	Req,
 } from '@nestjs/common';
-import type { Request } from 'express';
+import type { Request } from 'express-serve-static-core';
+import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
+import type { CurrentUser } from 'src/common/interface/common.interface';
 import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
 import {
 	BulkUpdateFileNodePermissionDto,
@@ -41,12 +43,12 @@ export class FileManagerController {
 	async upsertPemissions(
 		@Param('id') fileNodeId: string,
 		@Body() dto: UpsertFileNodePermissionDto,
-		@Req() req: Request,
+		@User() currentUser: CurrentUser,
 	) {
 		const data = await this.service.upsertPemissions({
 			fileNodeId,
 			dto,
-			req,
+			currentUser,
 		});
 		return new ResponseSuccess({ data });
 	}
@@ -55,12 +57,12 @@ export class FileManagerController {
 	async bulkUpdateFileNodePermission(
 		@Param('id') fileNodeId: string,
 		@Body() dto: BulkUpdateFileNodePermissionDto,
-		@Req() req: Request,
+		@User() currentUser: CurrentUser,
 	) {
 		const data = await this.service.bulkUpdateFileNodePermission({
 			fileNodeId,
 			dto,
-			req,
+			currentUser,
 		});
 		return new ResponseSuccess({ data });
 	}

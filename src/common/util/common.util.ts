@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
 import dayjs from 'dayjs';
 import { DateFormat } from '../enums/common.enum';
+import { CurrentUser } from '../interface/common.interface';
 
 export function generateFileNameWithTimestamp(
 	originalFileName: string,
@@ -45,4 +46,8 @@ export function parseReq2(req?: any) {
 export function generateShareLinkToken(): string {
 	const bytes = randomBytes(24);
 	return bytes.toString('base64url');
+}
+
+export function IS_ADMIN(currentUser: CurrentUser): boolean {
+	return currentUser.roles.includes('Admin');
 }

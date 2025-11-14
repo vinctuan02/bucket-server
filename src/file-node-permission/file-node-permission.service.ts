@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
+import { CurrentUser } from 'src/common/interface/common.interface';
+import { IS_ADMIN } from 'src/common/util/common.util';
 import { Repository } from 'typeorm';
 import {
 	UpdateFileNodePermissionDto,
@@ -73,6 +75,20 @@ export class FileNodePermissionService {
 		return e;
 	}
 
+	async findOneWithFileNode(id: string) {
+		const e = await this.fileNodePermissionRepo.findOne({
+			where: { id },
+			relations: { fileNode: true },
+		});
+		if (!e) {
+			throw new ResponseError({
+				message: 'File node permission not found',
+			});
+		}
+
+		return e;
+	}
+
 	async findByFileNode(fileNodeId: string) {
 		return this.fileNodePermissionRepo.find({ where: { fileNodeId } });
 	}
@@ -101,5 +117,27 @@ export class FileNodePermissionService {
 			})
 			.orderBy('c.depth', 'ASC')
 			.getOne();
+	}
+
+	async canRemove({
+		currentUser,
+		permissionId,
+	}: {
+		currentUser: CurrentUser;
+		permissionId: string;
+	}) {
+		const { userId } = currentUser;
+
+		if (IS_ADMIN(currentUser)) {
+			return true;
+		}
+
+		const p = await this.findOneWithFileNode(permissionId);
+
+		if (p.sharedById === userId || p.fileNode.ownerId === userId) {
+			return true;
+		}
+
+		return false;
 	}
 }
