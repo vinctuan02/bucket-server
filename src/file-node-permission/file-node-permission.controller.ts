@@ -7,8 +7,9 @@ import {
 	Post,
 	Put,
 } from '@nestjs/common';
-import { GetUserId } from 'src/common/decorators/common.decorator';
+import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
+import type { CurrentUser } from 'src/common/interface/common.interface';
 import {
 	UpdateFileNodePermissionDto,
 	UpsertFileNodePermissionDto,
@@ -21,10 +22,10 @@ export class FileNodePermissionController {
 
 	@Post()
 	async create(
-		@GetUserId() userId: string,
+		@User() currentUser: CurrentUser,
 		@Body() dto: UpsertFileNodePermissionDto,
 	) {
-		const data = await this.service.upsert({ userId, dto });
+		const data = await this.service.upsert({ currentUser, dto });
 		return new ResponseSuccess({ data });
 	}
 

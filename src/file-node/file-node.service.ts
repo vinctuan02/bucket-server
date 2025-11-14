@@ -166,7 +166,7 @@ export class FileManagerService {
 		}
 
 		const perm = await this.fileNodePermisisonSv.upsert({
-			userId,
+			currentUser,
 			dto: { ...dto, fileNodeId },
 		});
 
@@ -203,15 +203,19 @@ export class FileManagerService {
 		}
 
 		if (remove) {
-			for (const permissionId of remove) {
-				if (
-					await this.fileNodePermisisonSv.canRemove({
-						currentUser,
-						permissionId,
-					})
-				)
-					await this.fileNodePermisisonSv.remove(permissionId);
-			}
+			await Promise.all(
+				remove.map(async (permissionId) => {
+					const canRemove = await this.fileNodePermisisonSv.canRemove(
+						{
+							currentUser,
+							permissionId,
+						},
+					);
+					if (canRemove) {
+						await this.fileNodePermisisonSv.remove(permissionId);
+					}
+				}),
+			);
 		}
 
 		return {
