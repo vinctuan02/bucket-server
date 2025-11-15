@@ -16,4 +16,11 @@ export const UserResponse = {
 };
 
 export const USER_FIELDS_ALL = getValuesOfEnum(UserFM);
-export const USER_FIELDS_SIMPLE = [UserFM.ID, UserFM.NAME, UserFM.EMAIL];
+export const USER_FIELDS_SIMPLE = [
+	UserFM.ID,
+	UserFM.NAME,
+	UserFM.EMAIL,
+	UserFM.IS_ACTIVE,
+	UserFM.CREATED_AT,
+	UserFM.UPDATED_AT,
+];

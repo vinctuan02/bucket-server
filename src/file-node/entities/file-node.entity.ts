@@ -38,7 +38,6 @@ export class FileNode extends BaseUUIDEntity {
 	@Column({ type: 'uuid', nullable: true })
 	fileNodeParentId: string | null;
 
-	// hanlde delete
 	@Column({ type: 'boolean', default: false })
 	isDelete: boolean;
 
@@ -59,7 +58,7 @@ export class FileNode extends BaseUUIDEntity {
 	fileNodeParent: FileNode | null;
 
 	@TreeChildren()
-	fileNodeChildrens: FileNode[];
+	fileNodeChildren: FileNode[];
 
 	@OneToMany(() => FileNodePermission, (fnp) => fnp.fileNode)
 	fileNodePermissions: FileNodePermission[];

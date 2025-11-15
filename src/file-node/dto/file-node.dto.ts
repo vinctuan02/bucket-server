@@ -63,7 +63,7 @@ export class CreateFileDto {
 	fileMetadata: FileMetadata;
 }
 
-export class GetlistFileNodeDto extends BaseQueryDto {
+export class GetListFileNodeDto extends BaseQueryDto {
 	@IsOptional()
 	@IsUUID()
 	fileNodeParentId?: string;

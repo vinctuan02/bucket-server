@@ -1,6 +1,6 @@
 // public-share.controller.ts
 import { Injectable } from '@nestjs/common';
-import { GetlistFileNodeDto } from 'src/file-node/dto/file-node.dto';
+import { GetListFileNodeDto } from 'src/file-node/dto/file-node.dto';
 import { FileManagerService } from 'src/file-node/file-node.service';
 import { ShareLinkService } from 'src/share-link/share-link.service';
 
@@ -14,9 +14,9 @@ export class PublicShareService {
 	async getShared(token: string) {
 		const share = await this.shareLinkService.findByToken(token);
 
-		const data = await this.fileManagerService.getChildrens({
+		const data = await this.fileManagerService.getChildren({
 			id: share.fileNodeId,
-			filter: new GetlistFileNodeDto(),
+			filter: new GetListFileNodeDto(),
 		});
 
 		return {

@@ -9,7 +9,7 @@ import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
 import { CurrentUser } from 'src/common/interface/common.interface';
-import { parseReq, parseReq2 } from 'src/common/util/common.util';
+import { parseReq } from 'src/common/util/common.util';
 import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
 import { FileNodePermission } from 'src/file-node-permission/entities/file-node-permission.entity';
 import { FileNodePermissionService } from 'src/file-node-permission/file-node-permission.service';
@@ -24,7 +24,7 @@ import {
 	BulkUpdateFileNodePermissionDto,
 	CreateFileDto,
 	CreateFolderDto,
-	GetlistFileNodeDto,
+	GetListFileNodeDto,
 } from './dto/file-node.dto';
 import { FileNode } from './entities/file-node.entity';
 import { TYPE_FILE_NODE } from './enum/file-node.enum';
@@ -46,7 +46,7 @@ export class FileManagerService {
 		private readonly selectUtils: OrmUtilsSelect,
 
 		private readonly userStorageService: UserStorageService,
-		private readonly fileNodePermisisonSv: FileNodePermissionService,
+		private readonly fileNodePermissionSv: FileNodePermissionService,
 	) {}
 
 	// create
@@ -73,7 +73,7 @@ export class FileManagerService {
 		const result = await this.fileNodeRepo.save(folder);
 
 		if (fileNodeParentId) {
-			await this.fileNodePermisisonSv.generateChildPermissionsFromParent({
+			await this.fileNodePermissionSv.generateChildPermissionsFromParent({
 				fileNodeParentId,
 				fileNodeChildrenId: folder.id,
 			});
@@ -129,7 +129,7 @@ export class FileManagerService {
 		const saved = await this.fileNodeRepo.save(entity);
 
 		if (fileNodeParentId) {
-			await this.fileNodePermisisonSv.generateChildPermissionsFromParent({
+			await this.fileNodePermissionSv.generateChildPermissionsFromParent({
 				fileNodeParentId,
 				fileNodeChildrenId: saved.id,
 			});
@@ -143,7 +143,7 @@ export class FileManagerService {
 		return { ...saved, uploadUrl: fileBucketDb.uploadUrl };
 	}
 
-	async upsertPemissions({
+	async upsertPermissions({
 		dto,
 		currentUser,
 		fileNodeId,
@@ -153,11 +153,10 @@ export class FileManagerService {
 		fileNodeId: string;
 	}) {
 		const result: FileNodePermission[] = [];
-		const { userId } = currentUser;
 		const fN = await this.findOneWithChildren(fileNodeId);
 
-		for (const child of fN.fileNodeChildrens) {
-			const childPerms = await this.upsertPemissions({
+		for (const child of fN.fileNodeChildren) {
+			const childPerms = await this.upsertPermissions({
 				dto: { ...dto, fileNodeId: child.id },
 				currentUser,
 				fileNodeId: child.id,
@@ -165,7 +164,7 @@ export class FileManagerService {
 			result.push(...childPerms);
 		}
 
-		const perm = await this.fileNodePermisisonSv.upsert({
+		const perm = await this.fileNodePermissionSv.upsert({
 			currentUser,
 			dto: { ...dto, fileNodeId },
 		});
@@ -173,10 +172,6 @@ export class FileManagerService {
 		if (perm) result.push(perm);
 		return result;
 	}
-
-	// người được chia sẻ chỉ được chia sẻ với quyền nhỏ hơn hoặc bằng quyền đã được chia sẻ
-	// upsert: isAdmin, isOwnerFileNode, isOwnerPermission
-	// delete: if isAdmin, isOwnerFileNode, isOwnerPermission
 
 	async bulkUpdateFileNodePermission({
 		dto,
@@ -192,7 +187,7 @@ export class FileManagerService {
 
 		if (upsert) {
 			for (const dtoUpsert of upsert) {
-				const result = await this.upsertPemissions({
+				const result = await this.upsertPermissions({
 					dto: dtoUpsert,
 					fileNodeId,
 					currentUser,
@@ -205,14 +200,14 @@ export class FileManagerService {
 		if (remove) {
 			await Promise.all(
 				remove.map(async (permissionId) => {
-					const canRemove = await this.fileNodePermisisonSv.canRemove(
+					const canRemove = await this.fileNodePermissionSv.canRemove(
 						{
 							currentUser,
 							permissionId,
 						},
 					);
 					if (canRemove) {
-						await this.fileNodePermisisonSv.remove(permissionId);
+						await this.fileNodePermissionSv.remove(permissionId);
 					}
 				}),
 			);
@@ -227,6 +222,8 @@ export class FileManagerService {
 	// read
 	async findOne(id: string) {
 		const entity = await this.fileNodeRepo.findOne({ where: { id } });
+
+		console.log(id);
 
 		if (!entity) {
 			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();
@@ -256,6 +253,7 @@ export class FileManagerService {
 			relations: {
 				fileNodePermissions: {
 					user: true,
+					sharedBy: true,
 				},
 			},
 		});
@@ -279,18 +277,18 @@ export class FileManagerService {
 		return entity;
 	}
 
-	async getChildrens({
+	async getChildren({
 		id,
 		filter,
-		req,
+		currentUser,
 	}: {
 		id: string;
-		filter: GetlistFileNodeDto;
-		req?: Request;
+		filter: GetListFileNodeDto;
+		currentUser?: CurrentUser;
 	}) {
 		filter.fileNodeParentId = id;
 		filter.isDelete = false;
-		const data = await this.getList({ req, filter });
+		const data = await this.getList({ currentUser, filter });
 		return data;
 	}
 
@@ -316,7 +314,7 @@ export class FileManagerService {
 	async findOneWithChildren(id: string) {
 		const entity = await this.fileNodeRepo.findOne({
 			where: { id },
-			relations: { fileNodeChildrens: true },
+			relations: { fileNodeChildren: true },
 		});
 
 		if (!entity) {
@@ -331,7 +329,7 @@ export class FileManagerService {
 			where: { id },
 			relations: {
 				fileBucket: true,
-				fileNodeChildrens: {
+				fileNodeChildren: {
 					fileBucket: true,
 				},
 			},
@@ -357,14 +355,12 @@ export class FileManagerService {
 	}
 
 	async getList({
-		req,
+		currentUser,
 		filter,
 	}: {
-		req?: Request;
-		filter: GetlistFileNodeDto;
+		currentUser?: CurrentUser;
+		filter: GetListFileNodeDto;
 	}) {
-		const { userId, roles } = parseReq2(req);
-
 		const { fileNodeParentId, keywords, isDelete } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
 
@@ -378,16 +374,23 @@ export class FileManagerService {
 			}),
 		});
 
-		if (roles && !roles.includes('Admin')) {
-			qb.leftJoin('fileNode.fileNodePermissions', 'fileNodePermission');
-			qb.andWhere(
-				new Brackets((qb1) => {
-					qb1.where(
-						'fileNodePermission.canView = true AND fileNodePermission.userId = :userId',
-						{ userId },
-					).orWhere('fileNode.ownerId = :userId', { userId });
-				}),
-			);
+		if (currentUser) {
+			const { userId, roles } = currentUser;
+
+			if (roles && !roles.includes('Admin')) {
+				qb.leftJoin(
+					'fileNode.fileNodePermissions',
+					'fileNodePermission',
+				);
+				qb.andWhere(
+					new Brackets((qb1) => {
+						qb1.where(
+							'fileNodePermission.canView = true AND fileNodePermission.userId = :userId',
+							{ userId },
+						).orWhere('fileNode.ownerId = :userId', { userId });
+					}),
+				);
+			}
 		}
 
 		const [items, totalItems] = await qb.getManyAndCount();
@@ -397,7 +400,7 @@ export class FileManagerService {
 	async createRootIfNotExists(userId: string) {
 		try {
 			await this.findOne(userId);
-		} catch (error) {
+		} catch {
 			await this.createRootFolder(userId);
 		}
 	}
@@ -407,7 +410,7 @@ export class FileManagerService {
 		filter,
 	}: {
 		req: Request;
-		filter: GetlistFileNodeDto;
+		filter: GetListFileNodeDto;
 	}) {
 		const { userId } = parseReq(req);
 
@@ -424,12 +427,11 @@ export class FileManagerService {
 		return new PageDto({ items, metadata: { ...filter, totalItems } });
 	}
 
-	async getListWithChildrens({
-		req,
+	async getListWithChildren({
 		filter,
 	}: {
 		req: Request;
-		filter: GetlistFileNodeDto;
+		filter: GetListFileNodeDto;
 	}) {
 		const { fileNodeParentId } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
@@ -448,11 +450,10 @@ export class FileManagerService {
 	}
 
 	async getListFullTree({
-		req,
 		filter,
 	}: {
 		req: Request;
-		filter: GetlistFileNodeDto;
+		filter: GetListFileNodeDto;
 	}) {
 		const roots = await this.fileNodeRepo.findRoots();
 		const trees = await Promise.all(
@@ -482,9 +483,9 @@ export class FileManagerService {
 		const now = new Date();
 		await this.fileNodeRepo.update(id, { deletedAt: now, isDelete: true });
 
-		if (entity.fileNodeChildrens?.length) {
+		if (entity.fileNodeChildren?.length) {
 			await Promise.all(
-				entity.fileNodeChildrens.map((child) =>
+				entity.fileNodeChildren.map((child) =>
 					this.moveToTrash(child.id),
 				),
 			);
@@ -493,13 +494,11 @@ export class FileManagerService {
 
 	async deletePermanent(id: string) {
 		const fileNode = await this.findOneWithChildrenAndFileBucket(id);
-		const { fileNodeChildrens } = fileNode;
+		const { fileNodeChildren } = fileNode;
 
-		if (fileNodeChildrens.length) {
+		if (fileNodeChildren.length) {
 			await Promise.all(
-				fileNodeChildrens.map((child) =>
-					this.deletePermanent(child.id),
-				),
+				fileNodeChildren.map((child) => this.deletePermanent(child.id)),
 			);
 		}
 

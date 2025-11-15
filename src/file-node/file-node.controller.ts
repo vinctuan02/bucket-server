@@ -19,7 +19,7 @@ import {
 	BulkUpdateFileNodePermissionDto,
 	CreateFileDto,
 	CreateFolderDto,
-	GetlistFileNodeDto,
+	GetListFileNodeDto,
 } from './dto/file-node.dto';
 import { FileManagerService } from './file-node.service';
 
@@ -40,12 +40,12 @@ export class FileManagerController {
 	}
 
 	@Post(':id/permission')
-	async upsertPemissions(
+	async upsertPermissions(
 		@Param('id') fileNodeId: string,
 		@Body() dto: UpsertFileNodePermissionDto,
 		@User() currentUser: CurrentUser,
 	) {
-		const data = await this.service.upsertPemissions({
+		const data = await this.service.upsertPermissions({
 			fileNodeId,
 			dto,
 			currentUser,
@@ -68,30 +68,33 @@ export class FileManagerController {
 	}
 
 	@Get()
-	async getList(@Req() req: Request, @Query() filter: GetlistFileNodeDto) {
-		const data = await this.service.getList({ req, filter });
+	async getList(
+		@User() currentUser: CurrentUser,
+		@Query() filter: GetListFileNodeDto,
+	) {
+		const data = await this.service.getList({ currentUser, filter });
 		return new ResponseSuccess({ data });
 	}
 
 	@Get('home')
-	async getHome(@Req() req: Request, @Query() filter: GetlistFileNodeDto) {
+	async getHome(@Req() req: Request, @Query() filter: GetListFileNodeDto) {
 		const data = await this.service.getHome({ req, filter });
 		return new ResponseSuccess({ data });
 	}
 
-	@Get('with-childrens')
-	async getListWithChildrens(
+	@Get('with-children')
+	async getListWithChildren(
 		@Req() req: Request,
-		@Query() filter: GetlistFileNodeDto,
+		@Query() filter: GetListFileNodeDto,
 	) {
-		const data = await this.service.getListWithChildrens({ req, filter });
+		const data = await this.service.getListWithChildren({ req, filter });
 		return new ResponseSuccess({ data });
 	}
 
 	@Get('full-tree')
 	async getListFullTree(
 		@Req() req: Request,
-		@Query() filter: GetlistFileNodeDto,
+		@Query() filter: GetListFileNodeDto,
 	) {
 		const data = await this.service.getListFullTree({ req, filter });
 		return new ResponseSuccess({ data });
@@ -115,13 +118,17 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
-	@Get(':id/childrens')
-	async getChildrens(
+	@Get(':id/children')
+	async getChildren(
 		@Param('id') id: string,
-		@Req() req: Request,
-		@Query() filter: GetlistFileNodeDto,
+		@User() currentUser: CurrentUser,
+		@Query() filter: GetListFileNodeDto,
 	) {
-		const data = await this.service.getChildrens({ id, filter, req });
+		const data = await this.service.getChildren({
+			id,
+			filter,
+			currentUser,
+		});
 		return new ResponseSuccess({ data });
 	}
 
@@ -131,8 +138,8 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
-	@Get(':id/with-childrens')
-	async findOneWithChildrens(@Param('id') id: string) {
+	@Get(':id/with-children')
+	async findOneWithChildren(@Param('id') id: string) {
 		const data = await this.service.findOneWithChildren(id);
 		return new ResponseSuccess({ data });
 	}

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { CurrentUser } from 'src/common/interface/common.interface';
 import { IS_ADMIN } from 'src/common/util/common.util';
+import { FileNodeResponseError } from 'src/file-node/const/file-node.const';
 import { FileNode } from 'src/file-node/entities/file-node.entity';
 import { Repository } from 'typeorm';
 import {
@@ -51,29 +52,42 @@ export class FileNodePermissionService {
 		currentUser: CurrentUser;
 		dto: UpsertFileNodePermissionDto;
 	}) {
-		console.log(dto);
+		// Get current user's permissions on this file
+		const userPermissions = await this.checkPermissions({
+			currentUser,
+			fileNodeId: dto.fileNodeId,
+		});
 
-		const { canEditPermission, canEdit, canView } =
-			await this.checkPermissions({
-				currentUser,
-				fileNodeId: dto.fileNodeId,
-			});
+		// Check if permission already exists for target user
+		const existingPermission = await this.findOne2Safe({
+			fileNodeId: dto.fileNodeId,
+			userId: dto.userId,
+		});
 
-		if (!canEditPermission) {
+		// If UPDATING existing permission -> need canEditPermission
+		if (existingPermission && !userPermissions.canEditPermission) {
 			return;
 		}
 
-		if (dto.canEdit) {
-			dto.canEdit = canEdit;
+		// If CREATING new permission -> need at least canView
+		if (!existingPermission && !userPermissions.canView) {
+			return;
 		}
 
-		if (dto.canView) {
-			dto.canView = canView;
+		// Limit share permissions: cannot share higher than own permissions
+		if (dto.canEdit && !userPermissions.canEdit) {
+			dto.canEdit = false;
+		}
+
+		if (dto.canView && !userPermissions.canView) {
+			dto.canView = false;
 		}
 
 		const perm = this.fileNodePermissionRepo.create({
 			...dto,
-			sharedById: currentUser.userId,
+			sharedById: existingPermission
+				? existingPermission.sharedById
+				: currentUser.userId,
 		});
 
 		await this.fileNodePermissionRepo.upsert(perm, [
@@ -92,9 +106,35 @@ export class FileNodePermissionService {
 	async findFileNode(id: string) {
 		const fN = await this.fileNodeRepo.findOne({ where: { id } });
 		if (!fN) {
+			console.log(id);
 			throw new ResponseError({
 				message: 'File node not found',
 			});
+		}
+
+		return fN;
+	}
+
+	async findFileNodeAndPermissionOfUser({
+		fileNodeId,
+		userId,
+	}: {
+		fileNodeId: string;
+		userId: string;
+	}) {
+		const fN = await this.fileNodeRepo
+			.createQueryBuilder('fileNode')
+			.leftJoinAndSelect(
+				'fileNode.fileNodePermissions',
+				'fileNodePermission',
+				'fileNodePermission.userId = :userId',
+				{ userId },
+			)
+			.andWhere('fileNode.id = :fileNodeId', { fileNodeId })
+			.getOne();
+
+		if (!fN) {
+			throw FileNodeResponseError.FILE_NODE_NOT_FOUND(fileNodeId);
 		}
 
 		return fN;
@@ -226,7 +266,10 @@ export class FileNodePermissionService {
 			};
 		}
 
-		const fileNode = await this.findFileNode(fileNodeId);
+		const fileNode = await this.findFileNodeAndPermissionOfUser({
+			fileNodeId,
+			userId: currentUser.userId,
+		});
 
 		if (fileNode.ownerId === currentUser.userId) {
 			return {
@@ -237,12 +280,7 @@ export class FileNodePermissionService {
 			};
 		}
 
-		const per = await this.fileNodePermissionRepo.findOne({
-			where: { fileNodeId, userId },
-		});
-
-		console.log(per);
-
+		const per = fileNode.fileNodePermissions[0];
 		if (per) {
 			return {
 				canView: per.canView,
