@@ -106,7 +106,6 @@ export class FileNodePermissionService {
 	async findFileNode(id: string) {
 		const fN = await this.fileNodeRepo.findOne({ where: { id } });
 		if (!fN) {
-			console.log(id);
 			throw new ResponseError({
 				message: 'File node not found',
 			});

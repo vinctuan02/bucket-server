@@ -45,7 +45,7 @@ export class GetUploadUrlDto {
 
 	@IsString()
 	@IsNotEmpty()
-	@MaxLength(30)
+	@MaxLength(100)
 	contentType: string;
 
 	@IsString()

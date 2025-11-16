@@ -12,7 +12,7 @@ export class FileBucket extends BaseUUIDEntity {
 	@Column({ type: 'bigint', comment: 'store in bytes' })
 	fileSize: number;
 
-	@Column({ type: 'varchar', length: 30 })
+	@Column({ type: 'varchar', length: 100 })
 	contentType: string;
 
 	@Column({ type: 'varchar', length: 10 })

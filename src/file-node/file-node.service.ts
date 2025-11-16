@@ -120,6 +120,7 @@ export class FileManagerService {
 
 		const entity = this.createFileNode({
 			name,
+
 			type: TYPE_FILE_NODE.FILE,
 			parent,
 			fileBucketId: fileBucketDb.id,
@@ -222,8 +223,6 @@ export class FileManagerService {
 	// read
 	async findOne(id: string) {
 		const entity = await this.fileNodeRepo.findOne({ where: { id } });
-
-		console.log(id);
 
 		if (!entity) {
 			throw FileNodeResponseError.FILE_NODE_NOT_FOUND();

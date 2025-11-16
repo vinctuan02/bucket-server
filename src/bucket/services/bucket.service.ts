@@ -54,6 +54,7 @@ export class BucketService {
 		return {
 			id: file.id,
 			contentType: file.contentType,
+			fileName: file.fileName,
 			readUrl,
 		};
 	}
