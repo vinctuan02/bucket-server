@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { BaseQueryDto } from 'src/common/dto/common.query-dto';
 
 export class CreatePlanDto {
 	@ApiProperty({ example: 'Premium 200GB', description: 'Plan name' })
@@ -71,6 +73,22 @@ export class UpdatePlanDto {
 	@IsOptional()
 	@IsBoolean()
 	isActive?: boolean;
+}
+
+export class GetListPlanDto extends BaseQueryDto {
+	@ApiPropertyOptional({
+		example: true,
+		description: 'Filter by active status',
+	})
+	@IsOptional()
+	@Type(() => Boolean)
+	@IsBoolean()
+	isActive?: boolean;
+
+	constructor(init?: Partial<GetListPlanDto>) {
+		super();
+		Object.assign(this, init);
+	}
 }
 
 export class PlanResponseDto {

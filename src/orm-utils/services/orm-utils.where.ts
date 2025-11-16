@@ -20,6 +20,7 @@ export class OrmUtilsWhere {
 			keywordsPermission,
 			keywordsRole,
 			keywordsFileNode,
+			keywordsPlan,
 			pageSize,
 			skip,
 			fieldOrder,
@@ -37,6 +38,7 @@ export class OrmUtilsWhere {
 		this.andWherePermissionKeywords({ qb, keywords: keywordsPermission });
 		this.andWhereRoleKeywords({ qb, keywords: keywordsRole });
 		this.andWhereFileNodeKeywords({ qb, keywords: keywordsFileNode });
+		this.andWherePlanKeywords({ qb, keywords: keywordsPlan });
 		this.andWhereFileNodeParentId({ qb, fileNodeParentId });
 		this.andWhereFileNodeIsDelete({ qb, fileNodeIsDelete });
 	}
@@ -244,5 +246,42 @@ export class OrmUtilsWhere {
 				fileNodeIsDelete,
 			});
 		}
+	}
+
+	andWherePlanKeywords({
+		qb,
+		keywords,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		keywords?: string[];
+	}) {
+		if (keywords && keywords.length > 0) {
+			qb.andWhere(
+				new Brackets((subQb) => {
+					keywords.forEach((keyword, index) => {
+						const trimmed = keyword.trim();
+						if (!trimmed) return;
+
+						const paramName = `kw${index}`;
+						const paramValue = `%${trimmed}%`;
+
+						const condition = `
+                            (plan.name ILIKE :${paramName})
+                            OR (CAST(plan.description AS TEXT) ILIKE :${paramName})
+                        `;
+
+						if (index === 0) {
+							subQb.where(condition, { [paramName]: paramValue });
+						} else {
+							subQb.orWhere(condition, {
+								[paramName]: paramValue,
+							});
+						}
+					});
+				}),
+			);
+		}
+
+		return qb;
 	}
 }

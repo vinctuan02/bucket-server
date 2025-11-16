@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ResponseError } from 'src/common/dto/common.response-dto';
 import { Repository } from 'typeorm';
 import {
 	CreateTransactionDto,
@@ -43,8 +44,13 @@ export class TransactionService {
 		return this.transactionRepo.save(transaction);
 	}
 
-	async findById(id: string): Promise<Transaction | null> {
-		return this.transactionRepo.findOne({ where: { id } });
+	async findById(id: string): Promise<Transaction> {
+		const e = await this.transactionRepo.findOne({ where: { id } });
+		if (!e) {
+			throw new ResponseError({ message: 'Transaction not found' });
+		}
+
+		return e;
 	}
 
 	async findByUserId(userId: string): Promise<Transaction[]> {

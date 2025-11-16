@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrmUtilsModule } from 'src/orm-utils/orm-utils.module';
 import { PlanController } from './controllers/plan.controller';
 import { SubscriptionController } from './controllers/subscription.controller';
 import { TransactionController } from './controllers/transaction.controller';
@@ -11,7 +12,10 @@ import { SubscriptionService } from './services/subscription.service';
 import { TransactionService } from './services/transaction.service';
 
 @Module({
-	imports: [TypeOrmModule.forFeature([Plan, UserSubscription, Transaction])],
+	imports: [
+		TypeOrmModule.forFeature([Plan, UserSubscription, Transaction]),
+		OrmUtilsModule,
+	],
 	providers: [PlanService, SubscriptionService, TransactionService],
 	controllers: [
 		PlanController,

@@ -6,16 +6,23 @@ import {
 	Param,
 	Post,
 	Put,
+	Query,
 } from '@nestjs/common';
 import {
 	ApiBody,
 	ApiOperation,
 	ApiParam,
+	ApiQuery,
 	ApiResponse,
 	ApiTags,
 } from '@nestjs/swagger';
-import { ResponseSuccess } from 'src/common/dto/common.response-dto';
-import { CreatePlanDto, PlanResponseDto, UpdatePlanDto } from '../dto/plan.dto';
+import { PageDto, ResponseSuccess } from 'src/common/dto/common.response-dto';
+import {
+	CreatePlanDto,
+	GetListPlanDto,
+	PlanResponseDto,
+	UpdatePlanDto,
+} from '../dto/plan.dto';
 import { PlanService } from '../services/plan.service';
 
 @ApiTags('Subscription - Plans')
@@ -37,14 +44,17 @@ export class PlanController {
 	}
 
 	@Get()
-	@ApiOperation({ summary: 'Get all active plans' })
+	@ApiOperation({
+		summary: 'Get list of plans with pagination and filtering',
+	})
+	@ApiQuery({ type: GetListPlanDto })
 	@ApiResponse({
 		status: 200,
-		description: 'List of active plans',
-		type: [PlanResponseDto],
+		description: 'List of plans',
+		type: PageDto,
 	})
-	async findAll() {
-		const data = await this.service.findAll();
+	async findAll(@Query() filter: GetListPlanDto) {
+		const data = await this.service.findAll(filter);
 		return new ResponseSuccess({ data });
 	}
 
