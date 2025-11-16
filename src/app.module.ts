@@ -19,6 +19,7 @@ import { PublicShareModule } from './public-share/public-share.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { RoleModule } from './role/role.module';
 import { ShareLinkModule } from './share-link/share-link.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 import { UserRoleModule } from './user-role/user-role.module';
 import { UserStorageModule } from './user-storage/user-storage.module';
 import { UsersModule } from './users/user.module';
@@ -48,6 +49,7 @@ import { UsersModule } from './users/user.module';
 
 		PublicShareModule,
 		ShareLinkModule,
+		SubscriptionModule,
 		FileNodePermissionModule,
 		FileNodeModule,
 		UserStorageModule,
