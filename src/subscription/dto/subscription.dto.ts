@@ -26,19 +26,19 @@ export class SubscriptionResponseDto {
 	@ApiProperty({ type: PlanResponseDto, description: 'Plan details' })
 	plan: PlanResponseDto;
 
-	@ApiProperty({
+	@ApiPropertyOptional({
 		example: '2024-01-01T00:00:00Z',
 		description: 'Subscription start date',
 	})
-	startDate: Date;
+	startDate: Date | null;
 
-	@ApiProperty({
+	@ApiPropertyOptional({
 		example: '2024-02-01T00:00:00Z',
 		description: 'Subscription end date',
 	})
-	endDate: Date;
+	endDate: Date | null;
 
-	@ApiProperty({ example: true, description: 'Is subscription active' })
+	@ApiProperty({ example: false, description: 'Is subscription active' })
 	isActive: boolean;
 
 	@ApiProperty({ example: '2024-01-01T00:00:00Z', description: 'Created at' })

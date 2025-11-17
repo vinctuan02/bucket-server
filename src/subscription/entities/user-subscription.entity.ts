@@ -11,13 +11,13 @@ export class UserSubscription extends BaseUUIDEntity {
 	@Column({ type: 'uuid' })
 	planId: string;
 
-	@Column({ type: 'timestamptz' })
-	startDate: Date;
+	@Column({ type: 'timestamptz', nullable: true })
+	startDate: Date | null;
 
-	@Column({ type: 'timestamptz' })
-	endDate: Date;
+	@Column({ type: 'timestamptz', nullable: true })
+	endDate: Date | null;
 
-	@Column({ type: 'boolean', default: true })
+	@Column({ type: 'boolean', default: false })
 	isActive: boolean;
 
 	// relations

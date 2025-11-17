@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Req } from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -15,13 +15,17 @@ import {
 	TransactionResponseDto,
 	UpdateTransactionStatusDto,
 } from '../dto/transaction.dto';
+import { PaymentService } from '../services/payment.service';
 import { TransactionService } from '../services/transaction.service';
 
 @ApiTags('Subscription - Transactions')
 @ApiBearerAuth()
 @Controller('subscription/transactions')
 export class TransactionController {
-	constructor(private readonly service: TransactionService) {}
+	constructor(
+		private readonly service: TransactionService,
+		private readonly paymentService: PaymentService,
+	) {}
 
 	@Post()
 	@ApiOperation({ summary: 'Create a new transaction' })
@@ -122,5 +126,48 @@ export class TransactionController {
 	async fail(@Param('id') id: string) {
 		const data = await this.service.fail(id);
 		return new ResponseSuccess({ data });
+	}
+
+	@Post(':id/create-payment')
+	@ApiOperation({ summary: 'Create payment request with gateway' })
+	@ApiParam({
+		name: 'id',
+		type: 'string',
+		description: 'Transaction ID (UUID)',
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Payment request created',
+		schema: {
+			properties: {
+				redirectUrl: { type: 'string' },
+				expiresAt: { type: 'string', format: 'date-time' },
+			},
+		},
+	})
+	@ApiResponse({ status: 404, description: 'Transaction not found' })
+	async createPayment(@Param('id') id: string, @Req() req: any) {
+		const transaction = await this.service.findById(id);
+		const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+		const paymentResponse = await this.paymentService.createPayment(
+			transaction.paymentMethod as any,
+			{
+				transactionId: transaction.id,
+				amount: Number(transaction.amount),
+				currency: transaction.currency,
+				description: `Payment for subscription`,
+				returnUrl: `${baseUrl}/subscription/payment-result?transactionId=${transaction.id}`,
+				notifyUrl: `${baseUrl}/subscription/webhooks/${transaction.paymentMethod}`,
+			},
+		);
+
+		// Save payment gateway ID
+		await this.service.updateStatus(id, {
+			status: transaction.status,
+			paymentGatewayId: paymentResponse.paymentGatewayId,
+		});
+
+		return new ResponseSuccess({ data: paymentResponse });
 	}
 }

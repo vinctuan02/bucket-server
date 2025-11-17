@@ -31,6 +31,12 @@ export class Transaction extends BaseUUIDEntity {
 	@Column({ type: 'varchar', nullable: true })
 	transactionRef: string | null;
 
+	@Column({ name: 'payment_gateway_id', type: 'varchar', nullable: true })
+	paymentGatewayId: string | null;
+
+	@Column({ name: 'paid_at', type: 'timestamp', nullable: true })
+	paidAt: Date | null;
+
 	// relations
 	@ManyToOne(() => User)
 	@JoinColumn({ name: 'user_id' })
