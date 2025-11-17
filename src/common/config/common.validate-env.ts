@@ -13,6 +13,12 @@ export const validationSchema = Joi.object({
 	DEFAULT_PASS: Joi.string().min(6).required(),
 	DEFAULT_IS_ACTIVE: Joi.boolean().required(),
 
+	MINIO_HOST: Joi.string().required(),
+	MINIO_PORT: Joi.number().required(),
+	MINIO_ROOT_USER: Joi.string().required(),
+	MINIO_ROOT_PASSWORD: Joi.string().required(),
+	MINIO_BUCKET: Joi.string().required(),
+
 	MAIL_SERVICE: Joi.string().required(),
 	MAIL_USER: Joi.string().email().required(),
 	MAIL_PASS: Joi.string().required(),
