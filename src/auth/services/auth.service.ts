@@ -1,7 +1,6 @@
 // src/auth/auth.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { generateSixDigitOtp } from 'src/common/util/common.util';
 import { NotificationService } from 'src/notification/services/notification.service';
 import { UsersService } from 'src/users/services/user.service';
@@ -151,6 +150,8 @@ export class AuthService {
 			.catch((err) => {
 				this.logger.error('Error sending reset password email:', err);
 			});
+
+		return { userId: user.id };
 	}
 
 	verifyResetCode({ userId, code }: { userId: string; code: string }) {
@@ -162,17 +163,21 @@ export class AuthService {
 
 		this.verificationCodes.delete(userId);
 
-		return this.genarateResetToken(userId);
+		const token = this.genarateResetToken(userId);
+		return { token, userId };
 	}
 
 	async resetPassword(dto: ResetPasswordDto) {
 		const { token, newPassword } = dto;
 
-		const { userId } = this.jwtService.verify(token);
-		const hashed = await bcrypt.hash(newPassword, 10);
+		const payload = this.jwtService.verify(token);
 
-		const user = await this.usersService.update(userId, {
-			password: hashed,
+		if (payload.type !== TypeToken.RESET_PASSWORD) {
+			throw AuthResponseError.INVALID_TOKEN_TYPE();
+		}
+
+		const user = await this.usersService.update(payload.userId, {
+			password: newPassword,
 		});
 
 		return user;

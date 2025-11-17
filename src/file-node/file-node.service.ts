@@ -530,6 +530,23 @@ export class FileManagerService {
 		}
 	}
 
+	async restore(id: string) {
+		const entity = await this.findOneWithChildren(id);
+
+		await this.fileNodeRepo.update(id, {
+			deletedAt: null,
+			isDelete: false,
+		});
+
+		if (entity.fileNodeChildren?.length) {
+			await Promise.all(
+				entity.fileNodeChildren.map((child) => this.restore(child.id)),
+			);
+		}
+
+		return entity;
+	}
+
 	async deleteByUserId(userId: string) {
 		await this.fileNodeRepo.delete({ ownerId: userId });
 		await this.userStorageService.deleteByUserId(userId);

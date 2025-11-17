@@ -74,8 +74,8 @@ export class AuthController {
 	@Public()
 	@Post('forgot-password')
 	async forgotPassword(@Body() dto: ForgotPasswordDto) {
-		await this.authService.forgotPassword(dto.email);
-		return AuthResponseSuccess.FORGOT_PASSWORD({});
+		const data = await this.authService.forgotPassword(dto.email);
+		return AuthResponseSuccess.FORGOT_PASSWORD({ data });
 	}
 
 	@Public()
@@ -88,8 +88,8 @@ export class AuthController {
 	@Public()
 	@Post('reset-password')
 	async resetPassword(@Body() dto: ResetPasswordDto) {
-		await this.authService.resetPassword(dto);
-		return AuthResponseSuccess.RERET_PASSWORD({});
+		const data = await this.authService.resetPassword(dto);
+		return AuthResponseSuccess.RERET_PASSWORD({ data });
 	}
 
 	@Get('me')
