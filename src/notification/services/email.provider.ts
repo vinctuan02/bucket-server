@@ -11,10 +11,10 @@ export class EmailProvider {
 
 	constructor(private configService: ConfigService) {
 		this.transporter = nodemailer.createTransport({
-			service: this.configService.get<string>('EMAIL_SERVICE', 'gmail'),
+			service: this.configService.get<string>('MAIL_SERVICE', 'gmail'),
 			auth: {
-				user: this.configService.get<string>('EMAIL_USER'),
-				pass: this.configService.get<string>('EMAIL_PASS'),
+				user: this.configService.get<string>('MAIL_USER'),
+				pass: this.configService.get<string>('MAIL_PASS'),
 			},
 		});
 	}
@@ -24,7 +24,7 @@ export class EmailProvider {
 
 		try {
 			await this.transporter.sendMail({
-				from: process.env.EMAIL_USER,
+				from: process.env.MAIL_USER,
 				to,
 				subject,
 				html,

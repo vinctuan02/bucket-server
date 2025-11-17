@@ -1,0 +1,121 @@
+services:
+    postgres:
+        image: postgres:17-alpine
+        container_name: bucket-postgres
+        environment:
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: admin123
+            POSTGRES_DB: bucket_db
+            POSTGRES_INITDB_ARGS: '-c max_connections=200'
+        ports:
+            - '5432:5432'
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U admin']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        restart: unless-stopped
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '10m'
+                max-file: '3'
+
+    minio:
+        image: minio/minio:latest
+        container_name: bucket-minio
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+        ports:
+            - '9000:9000'
+            - '9001:9001'
+        volumes:
+            - minio_data:/minio_data
+        command: minio server /minio_data --console-address ":9001"
+        healthcheck:
+            test:
+                ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+            interval: 30s
+            timeout: 20s
+            retries: 3
+        restart: unless-stopped
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '10m'
+                max-file: '3'
+
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: bucket-app
+        depends_on:
+            postgres:
+                condition: service_healthy
+            minio:
+                condition: service_healthy
+        environment:
+            # Database
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_USER: ${DB_USER}
+            DB_PASS: ${DB_PASS}
+            DB_NAME: ${DB_NAME}
+
+            # MinIO
+            MINIO_HOST: minio
+            MINIO_PORT: 9000
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+            MINIO_BUCKET: ${MINIO_BUCKET}
+            MINIO_USE_SSL: false
+
+            # App
+            PORT: ${PORT}
+            NODE_ENV: development
+
+            # JWT
+            JWT_SECRET: ${JWT_SECRET}
+            JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
+
+            # Google OAuth
+            GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+            GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+            CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+
+            # Email
+            EMAIL_SERVICE: ${MAIL_SERVICE}
+            EMAIL_USER: ${MAIL_USER}
+            EMAIL_PASS: ${MAIL_PASS}
+            EMAIL_PORT: ${MAIL_PORT}
+
+            # Trash
+            TRASH_EXPIRE_DAYS: ${TRASH_EXPIRE_DAYS}
+
+            # Default User
+            DEFAULT_USER_ID: ${DEFAULT_USER_ID}
+            DEFAULT_NAME: ${DEFAULT_NAME}
+            DEFAULT_EMAIL: ${DEFAULT_EMAIL}
+            DEFAULT_PASS: ${DEFAULT_PASS}
+            DEFAULT_IS_ACTIVE: ${DEFAULT_IS_ACTIVE}
+
+        ports:
+            - '${PORT}:${PORT}'
+        volumes:
+            - ./dist:/app/dist:ro
+        restart: unless-stopped
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '10m'
+                max-file: '3'
+
+volumes:
+    postgres_data:
+        driver: local
+    minio_data:
+        driver: local

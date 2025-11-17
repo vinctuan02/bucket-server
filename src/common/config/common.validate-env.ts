@@ -13,11 +13,11 @@ export const validationSchema = Joi.object({
 	DEFAULT_PASS: Joi.string().min(6).required(),
 	DEFAULT_IS_ACTIVE: Joi.boolean().required(),
 
-	EMAIL_SERVICE: Joi.string().required(),
-	EMAIL_USER: Joi.string().email().required(),
-	EMAIL_PASS: Joi.string().required(),
+	MAIL_SERVICE: Joi.string().required(),
+	MAIL_USER: Joi.string().email().required(),
+	MAIL_PASS: Joi.string().required(),
 
 	GOOGLE_CLIENT_ID: Joi.string().required(),
 	GOOGLE_CLIENT_SECRET: Joi.string().required(),
-	CALLBACK_URL: Joi.string().required(),
+	GOOGLE_CALLBACK_URL: Joi.string().required(),
 });

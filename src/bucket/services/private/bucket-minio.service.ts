@@ -14,8 +14,8 @@ export class BucketMinioService {
 			endPoint: this.configService.get<string>('MINIO_HOST')!,
 			port: Number(this.configService.get<string>('MINIO_PORT')),
 			useSSL: this.configService.get<string>('MINIO_USE_SSL') === 'true',
-			accessKey: this.configService.get<string>('MINIO_ACCESS_KEY')!,
-			secretKey: this.configService.get<string>('MINIO_SECRET_KEY')!,
+			accessKey: this.configService.get<string>('MINIO_ROOT_USER')!,
+			secretKey: this.configService.get<string>('MINIO_ROOT_PASSWORD')!,
 		});
 
 		this.bucket = configService.get<string>('MINIO_BUCKET') ?? '';
