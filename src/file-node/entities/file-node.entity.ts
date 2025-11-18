@@ -18,7 +18,7 @@ import { TYPE_FILE_NODE } from '../enum/file-node.enum';
 
 @Entity('file_node')
 @Tree('closure-table')
-@Unique(['fileNodeParentId', 'type', 'name', 'isDelete'])
+@Unique(['fileNodeParentId', 'type', 'name', 'isDelete', 'ownerId'])
 export class FileNode extends BaseUUIDEntity {
 	@Column({ type: 'varchar', length: 255 })
 	name: string;

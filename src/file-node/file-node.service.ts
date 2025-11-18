@@ -60,6 +60,7 @@ export class FileManagerService {
 				fileNodeParentId,
 				name,
 				type: TYPE_FILE_NODE.FOLDER,
+				ownerId: userId,
 			});
 		}
 
@@ -111,6 +112,7 @@ export class FileManagerService {
 				fileNodeParentId,
 				name,
 				type: TYPE_FILE_NODE.FILE,
+				ownerId: userId,
 			});
 		}
 		const fileBucketDb = await this.bucketSv.getUploadUrl({
@@ -305,7 +307,17 @@ export class FileManagerService {
 			.getTreeRepository(FileNode)
 			.findAncestors(node);
 
-		parents[0].name = 'Home';
+		// Sắp xếp theo depth: root (fileNodeParentId = null) ở đầu
+		parents.sort((a, b) => {
+			const aIsRoot = a.fileNodeParentId === null ? 0 : 1;
+			const bIsRoot = b.fileNodeParentId === null ? 0 : 1;
+			return aIsRoot - bIsRoot;
+		});
+
+		// Gán tên 'Home' cho root node
+		if (parents.length > 0 && parents[0].fileNodeParentId === null) {
+			parents[0].name = 'Home';
+		}
 
 		return parents;
 	}
@@ -565,9 +577,11 @@ export class FileManagerService {
 		name,
 		type,
 		isDelete = false,
+		ownerId,
 	}: {
 		fileNodeParentId: string;
 		name: string;
+		ownerId: string;
 		type: TYPE_FILE_NODE;
 		isDelete?: boolean;
 	}) {
@@ -577,6 +591,7 @@ export class FileManagerService {
 				name,
 				type,
 				isDelete,
+				ownerId,
 			},
 		});
 
