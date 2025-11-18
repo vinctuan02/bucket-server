@@ -15,6 +15,7 @@ import { FileNodePermission } from 'src/file-node-permission/entities/file-node-
 import { FileNodePermissionService } from 'src/file-node-permission/file-node-permission.service';
 import { OrmFilterDto } from 'src/orm-utils/dto/orm-utils.dto';
 import { OrmUtilsCreateQb } from 'src/orm-utils/services/orm-utils.create-qb';
+import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
@@ -47,6 +48,7 @@ export class FileManagerService {
 
 		private readonly userStorageService: UserStorageService,
 		private readonly fileNodePermissionSv: FileNodePermissionService,
+		private readonly ormUtilsJoin: OrmUtilsJoin,
 	) {}
 
 	// create
@@ -374,6 +376,7 @@ export class FileManagerService {
 	}) {
 		const { fileNodeParentId, keywords, isDelete } = filter;
 		const qb = this.createQbUtils.createFileNodeQb();
+		this.ormUtilsJoin.leftJoinFileNodeWithFileBucket(qb);
 
 		this.whereUtils.applyFilter({
 			qb,
@@ -403,6 +406,13 @@ export class FileManagerService {
 				);
 			}
 		}
+
+		qb.addSelect([
+			'fileBucket.id',
+			'fileBucket.fileName',
+			'fileBucket.fileSize',
+			'fileBucket.contentType',
+		]);
 
 		const [items, totalItems] = await qb.getManyAndCount();
 		return new PageDto({ items, metadata: { ...filter, totalItems } });
@@ -479,9 +489,9 @@ export class FileManagerService {
 	}
 
 	async delete(id: string) {
-		const entity = await this.findOneWithChildren(id);
+		const isExists = await this.findOneWithChildren(id);
 
-		if (entity.isDelete) {
+		if (isExists.isDelete) {
 			await this.deletePermanent(id);
 		} else {
 			await this.moveToTrash(id);
@@ -492,6 +502,10 @@ export class FileManagerService {
 		const entity = await this.findOneWithChildren(id);
 
 		const now = new Date();
+		// const isExistInTrash = await this.validateUniqueConstraint({
+
+		// })
+
 		await this.fileNodeRepo.update(id, { deletedAt: now, isDelete: true });
 
 		if (entity.fileNodeChildren?.length) {

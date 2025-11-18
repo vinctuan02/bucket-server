@@ -106,6 +106,22 @@ export class FileManagerController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Put(':id/restore')
+	@ApiOperation({ summary: 'Restore file/folder from trash' })
+	@ApiParam({
+		name: 'id',
+		type: 'string',
+		description: 'File/Folder ID (UUID)',
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'File/folder restored successfully',
+	})
+	async restore(@Param('id') id: string) {
+		const data = await this.service.restore(id);
+		return new ResponseSuccess({ data });
+	}
+
 	@Get()
 	@ApiOperation({ summary: 'Get list of files/folders' })
 	@ApiQuery({ type: GetListFileNodeDto })
@@ -284,21 +300,5 @@ export class FileManagerController {
 	})
 	async deletePermanent(@Req() req: Request, @Param('id') id: string) {
 		await this.service.deletePermanent(id);
-	}
-
-	@Put(':id/restore')
-	@ApiOperation({ summary: 'Restore file/folder from trash' })
-	@ApiParam({
-		name: 'id',
-		type: 'string',
-		description: 'File/Folder ID (UUID)',
-	})
-	@ApiResponse({
-		status: 200,
-		description: 'File/folder restored successfully',
-	})
-	async restore(@Param('id') id: string) {
-		const data = await this.service.restore(id);
-		return new ResponseSuccess({ data });
 	}
 }

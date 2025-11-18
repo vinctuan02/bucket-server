@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { FileNodeFM } from 'src/file-node/fm/file-node.fm';
 import { RolePermissionFM } from 'src/role-permission/constants/role-permission.constant';
 import { UserRoleFM } from 'src/user-role/enum/user-role.enum';
 import { UserFMR } from 'src/users/enum/user.enum';
@@ -16,5 +17,9 @@ export class OrmUtilsJoin {
 	leftJoinRoleWithPermissions(qb: SelectQueryBuilder<any>) {
 		qb.leftJoin(RoleFM.ROLE_PERMISSIONS, Alias.ROLE_PERMISSION);
 		qb.leftJoin(RolePermissionFM.PERMISSION, Alias.PERMISSION);
+	}
+
+	leftJoinFileNodeWithFileBucket(qb: SelectQueryBuilder<any>) {
+		qb.leftJoin(FileNodeFM.fileBucket, Alias.fileBucket);
 	}
 }
