@@ -6,7 +6,8 @@ import { OrmUtilsModule } from 'src/orm-utils/orm-utils.module';
 import { UserStorageModule } from 'src/user-storage/user-storage.module';
 import { FileNode } from './entities/file-node.entity';
 import { FileManagerController } from './file-node.controller';
-import { FileManagerService } from './file-node.service';
+import { FileNodeDownloadService } from './services/file-node-download.service';
+import { FileManagerService } from './services/file-node.service';
 
 @Module({
 	imports: [
@@ -17,7 +18,7 @@ import { FileManagerService } from './file-node.service';
 		FileNodePermissionModule,
 	],
 	controllers: [FileManagerController],
-	providers: [FileManagerService],
-	exports: [FileManagerService],
+	providers: [FileManagerService, FileNodeDownloadService],
+	exports: [FileManagerService, FileNodeDownloadService],
 })
 export class FileNodeModule {}

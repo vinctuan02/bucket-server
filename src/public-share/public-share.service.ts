@@ -1,7 +1,7 @@
 // public-share.controller.ts
 import { Injectable } from '@nestjs/common';
 import { GetListFileNodeDto } from 'src/file-node/dto/file-node.dto';
-import { FileManagerService } from 'src/file-node/file-node.service';
+import { FileManagerService } from 'src/file-node/services/file-node.service';
 import { ShareLinkService } from 'src/share-link/share-link.service';
 
 @Injectable()

@@ -9,6 +9,7 @@ import {
 	Put,
 	Query,
 	Req,
+	Res,
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
@@ -19,7 +20,8 @@ import {
 	ApiResponse,
 	ApiTags,
 } from '@nestjs/swagger';
-import type { Request } from 'express-serve-static-core';
+import type { Request, Response } from 'express';
+import * as fs from 'fs';
 import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import type { CurrentUser } from 'src/common/interface/common.interface';
@@ -30,13 +32,17 @@ import {
 	CreateFolderDto,
 	GetListFileNodeDto,
 } from './dto/file-node.dto';
-import { FileManagerService } from './file-node.service';
+import { FileNodeDownloadService } from './services/file-node-download.service';
+import { FileManagerService } from './services/file-node.service';
 
 @ApiTags('File Manager')
 @ApiBearerAuth()
 @Controller('file-manager')
 export class FileManagerController {
-	constructor(private readonly service: FileManagerService) {}
+	constructor(
+		private readonly service: FileManagerService,
+		private readonly downloadService: FileNodeDownloadService,
+	) {}
 
 	@Post('folder')
 	@ApiOperation({ summary: 'Create a new folder' })
@@ -131,6 +137,44 @@ export class FileManagerController {
 		@Query() filter: GetListFileNodeDto,
 	) {
 		const data = await this.service.getList({ currentUser, filter });
+		return new ResponseSuccess({ data });
+	}
+
+	@Get('trash')
+	@ApiOperation({ summary: 'Get trashed files and folders' })
+	@ApiQuery({ type: GetListFileNodeDto })
+	@ApiResponse({
+		status: 200,
+		description: 'List of trashed files and folders',
+	})
+	async getTrashedFileNodes(
+		@User() currentUser: CurrentUser,
+		@Query() filter: GetListFileNodeDto,
+	) {
+		const data = await this.service.getTrashedFileNodes({
+			currentUser,
+			filter,
+		});
+		return new ResponseSuccess({ data });
+	}
+
+	@Get('share-with-me')
+	@ApiOperation({
+		summary: 'Get files and folders shared with the current user',
+	})
+	@ApiQuery({ type: GetListFileNodeDto })
+	@ApiResponse({
+		status: 200,
+		description: 'List of files and folders shared with the current user',
+	})
+	async getSharedWithMeFileNodes(
+		@User() currentUser: CurrentUser,
+		@Query() filter: GetListFileNodeDto,
+	) {
+		const data = await this.service.getSharedWithMeFileNodes({
+			currentUser,
+			filter,
+		});
 		return new ResponseSuccess({ data });
 	}
 
@@ -270,6 +314,89 @@ export class FileManagerController {
 	async readFile(@Param('id') id: string) {
 		const data = await this.service.readFile(id);
 		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id/zip')
+	@ApiOperation({
+		summary: 'Create zip file for download',
+		description:
+			'Create a zip archive of a file or folder and return the download path',
+	})
+	@ApiParam({
+		name: 'id',
+		type: 'string',
+		description: 'File/Folder ID (UUID)',
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Zip file created, returns download path',
+		schema: {
+			example: { path: '/downloads/file-123.zip' },
+		},
+	})
+	async createZip(@Param('id') id: string) {
+		const data = await this.downloadService.createZip(id);
+		return new ResponseSuccess({ data });
+	}
+
+	@Get(':id/download/:path')
+	@ApiOperation({
+		summary: 'Download zip file by path',
+		description:
+			'Download a previously created zip file and delete it from server after download',
+	})
+	@ApiParam({
+		name: 'id',
+		type: 'string',
+		description: 'File/Folder ID (UUID)',
+	})
+	@ApiParam({
+		name: 'path',
+		type: 'string',
+		description: 'Relative path to zip file (from /downloads)',
+	})
+	@ApiResponse({ status: 200, description: 'File downloaded and deleted' })
+	async downloadZip(
+		@Param('id') id: string,
+		@Param('path') path: string,
+		@Res() res: Response,
+	) {
+		try {
+			const filePath = await this.downloadService.getDownloadPath(
+				id,
+				path,
+			);
+
+			// Set response headers
+			res.setHeader(
+				'Content-Disposition',
+				`attachment; filename="${encodeURIComponent(path)}"`,
+			);
+			res.setHeader('Content-Type', 'application/zip');
+
+			// Stream file to response
+			const fileStream = fs.createReadStream(filePath);
+			fileStream.pipe(res);
+
+			// Clean up file after sending
+			fileStream.on('end', () => {
+				fs.unlink(filePath, () => {
+					// Silently ignore errors
+				});
+			});
+
+			fileStream.on('error', () => {
+				res.status(500).json({ error: 'Failed to download file' });
+				fs.unlink(filePath, () => {
+					// Silently ignore errors
+				});
+			});
+		} catch (error) {
+			res.status(500).json({
+				error:
+					error instanceof Error ? error.message : 'Download failed',
+			});
+		}
 	}
 
 	@Delete(':id')

@@ -20,15 +20,15 @@ import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
 import { Brackets, LessThanOrEqual, TreeRepository } from 'typeorm';
-import { FileNodeResponseError } from './const/file-node.const';
+import { FileNodeResponseError } from '../const/file-node.const';
 import {
 	BulkUpdateFileNodePermissionDto,
 	CreateFileDto,
 	CreateFolderDto,
 	GetListFileNodeDto,
-} from './dto/file-node.dto';
-import { FileNode } from './entities/file-node.entity';
-import { TYPE_FILE_NODE } from './enum/file-node.enum';
+} from '../dto/file-node.dto';
+import { FileNode } from '../entities/file-node.entity';
+import { TYPE_FILE_NODE } from '../enum/file-node.enum';
 
 @Injectable()
 export class FileManagerService {
@@ -418,6 +418,107 @@ export class FileManagerService {
 		return new PageDto({ items, metadata: { ...filter, totalItems } });
 	}
 
+	async getTrashedFileNodes({
+		currentUser,
+		filter,
+	}: {
+		currentUser?: CurrentUser;
+		filter: GetListFileNodeDto;
+	}) {
+		const { fileNodeParentId, keywords } = filter;
+		const qb = this.createQbUtils.createFileNodeQb();
+		this.ormUtilsJoin.leftJoinFileNodeWithFileBucket(qb);
+
+		this.whereUtils.applyFilter({
+			qb,
+			filter: new OrmFilterDto({
+				fileNodeParentId,
+				keywordsFileNode: keywords,
+				fileNodeIsDelete: true,
+				...filter,
+			}),
+		});
+
+		if (currentUser) {
+			const { userId, roles } = currentUser;
+
+			if (roles && !roles.includes('Admin')) {
+				qb.leftJoin(
+					'fileNode.fileNodePermissions',
+					'fileNodePermission',
+				);
+				qb.andWhere(
+					new Brackets((qb1) => {
+						qb1.where(
+							'fileNodePermission.canView = true AND fileNodePermission.userId = :userId',
+							{ userId },
+						).orWhere('fileNode.ownerId = :userId', { userId });
+					}),
+				);
+			}
+		}
+
+		qb.addSelect([
+			'fileBucket.id',
+			'fileBucket.fileName',
+			'fileBucket.fileSize',
+			'fileBucket.contentType',
+		]);
+
+		const [items, totalItems] = await qb.getManyAndCount();
+		return new PageDto({
+			items: this.buildTrees(items),
+			// items,
+			metadata: { ...filter, totalItems },
+		});
+	}
+
+	async getSharedWithMeFileNodes({
+		currentUser,
+		filter,
+	}: {
+		currentUser?: CurrentUser;
+		filter: GetListFileNodeDto;
+	}) {
+		const { fileNodeParentId, keywords } = filter;
+		const qb = this.createQbUtils.createFileNodeQb();
+		this.ormUtilsJoin.leftJoinFileNodeWithFileBucket(qb);
+
+		this.whereUtils.applyFilter({
+			qb,
+			filter: new OrmFilterDto({
+				fileNodeParentId,
+				keywordsFileNode: keywords,
+				fileNodeIsDelete: false,
+				...filter,
+			}),
+		});
+
+		if (currentUser) {
+			const { userId, roles } = currentUser;
+
+			if (roles && !roles.includes('Admin')) {
+				qb.leftJoin(
+					'fileNode.fileNodePermissions',
+					'fileNodePermission',
+				);
+				qb.andWhere(
+					'fileNodePermission.canView = true AND fileNodePermission.userId = :userId',
+					{
+						userId,
+					},
+				).andWhere('fileNode.ownerId != :userId', { userId });
+			}
+		}
+
+		const [items, totalItems] = await qb.getManyAndCount();
+		return new PageDto({
+			items: this.buildTrees(items),
+			// items,
+			metadata: { ...filter, totalItems },
+		});
+	}
+
 	async createRootIfNotExists(userId: string) {
 		try {
 			await this.findOne(userId);
@@ -640,5 +741,41 @@ export class FileManagerService {
 			fileNodeParent: data.parent || null,
 			fileBucketId: data.fileBucketId || null,
 		});
+	}
+
+	private buildTrees(fileNodes: FileNode[]): FileNode[] {
+		// Create a map for quick lookup by id
+		const nodeMap = new Map<string, FileNode>();
+		const nodeIds = new Set(fileNodes.map((n) => n.id));
+
+		// First pass: populate map
+		fileNodes.forEach((node) => {
+			nodeMap.set(node.id, { ...node, fileNodeChildren: [] });
+		});
+
+		// Second pass: build tree structure and identify roots
+		// Root = node whose parent is NOT in the provided list
+		const roots: FileNode[] = [];
+		fileNodes.forEach((node) => {
+			if (node.fileNodeParentId && nodeIds.has(node.fileNodeParentId)) {
+				// Parent exists in the list, add as child
+				const parent = nodeMap.get(node.fileNodeParentId);
+				const child = nodeMap.get(node.id);
+				if (parent && child) {
+					parent.fileNodeChildren.push(child);
+				}
+			} else if (
+				!node.fileNodeParentId ||
+				!nodeIds.has(node.fileNodeParentId)
+			) {
+				// Parent doesn't exist in list or node has no parent = root
+				const root = nodeMap.get(node.id);
+				if (root) {
+					roots.push(root);
+				}
+			}
+		});
+
+		return roots;
 	}
 }

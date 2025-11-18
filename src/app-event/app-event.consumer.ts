@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { FileManagerService } from 'src/file-node/file-node.service';
+import { FileManagerService } from 'src/file-node/services/file-node.service';
 import { AppEventType } from './enum/app-event.enum';
 
 @Injectable()
