@@ -9,17 +9,22 @@ import {
 import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import type { CurrentUser } from 'src/common/interface/common.interface';
+import { PlanResponseDto } from '../dto/plan.dto';
 import {
 	CreateSubscriptionDto,
 	SubscriptionResponseDto,
 } from '../dto/subscription.dto';
+import { PlanService } from '../services/plan.service';
 import { SubscriptionService } from '../services/subscription.service';
 
 @ApiTags('Subscription - Subscriptions')
 @ApiBearerAuth()
 @Controller('subscription/subscriptions')
 export class SubscriptionController {
-	constructor(private readonly service: SubscriptionService) {}
+	constructor(
+		private readonly service: SubscriptionService,
+		private readonly planService: PlanService,
+	) {}
 
 	@Post()
 	@ApiOperation({ summary: 'Create a new subscription for user' })
@@ -50,16 +55,22 @@ export class SubscriptionController {
 		return new ResponseSuccess({ data });
 	}
 
-	@Get('active')
-	@ApiOperation({ summary: 'Get active subscription for current user' })
+	@Get('storage/plans')
+	@ApiOperation({
+		summary:
+			'Get all available storage plans for "Get More Storage" feature',
+	})
 	@ApiResponse({
 		status: 200,
-		description: 'Active subscription details',
-		type: SubscriptionResponseDto,
+		description: 'List of available storage plans',
+		type: [PlanResponseDto],
 	})
-	@ApiResponse({ status: 404, description: 'No active subscription found' })
-	async findActive(@User() user: CurrentUser) {
-		const data = await this.service.findActiveByUserId(user.userId);
-		return new ResponseSuccess({ data });
+	async getStoragePlans() {
+		const pageData = await this.planService.findAll({
+			isActive: true,
+			page: 1,
+			pageSize: 100,
+		} as any);
+		return new ResponseSuccess({ data: pageData.items });
 	}
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrmUtilsModule } from 'src/orm-utils/orm-utils.module';
+import { UserStorageModule } from 'src/user-storage/user-storage.module';
 import { PlanController } from './controllers/plan.controller';
 import { SubscriptionController } from './controllers/subscription.controller';
 import { TransactionController } from './controllers/transaction.controller';
@@ -22,6 +23,7 @@ import { TransactionService } from './services/transaction.service';
 		TypeOrmModule.forFeature([Plan, UserSubscription, Transaction]),
 		OrmUtilsModule,
 		ScheduleModule.forRoot(),
+		UserStorageModule,
 	],
 	providers: [
 		PlanService,

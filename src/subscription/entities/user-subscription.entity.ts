@@ -25,7 +25,7 @@ export class UserSubscription extends BaseUUIDEntity {
 	@JoinColumn({ name: 'user_id' })
 	user: User;
 
-	@ManyToOne(() => Plan)
+	@ManyToOne(() => Plan, { onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'plan_id' })
 	plan: Plan;
 }

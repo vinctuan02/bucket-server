@@ -1,18 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
+import { UserStorageService } from 'src/user-storage/user-storage.service';
 import { LessThan, Repository } from 'typeorm';
 import { CreateSubscriptionDto } from '../dto/subscription.dto';
 import { UserSubscription } from '../entities/user-subscription.entity';
+import { PlanService } from './plan.service';
 
 @Injectable()
 export class SubscriptionService {
 	constructor(
 		@InjectRepository(UserSubscription)
 		private subscriptionRepo: Repository<UserSubscription>,
+
+		private readonly planService: PlanService,
+		private readonly userStorageService: UserStorageService,
 	) {}
 
 	async create(userId: string, dto: CreateSubscriptionDto) {
+		const plan = await this.planService.findById(dto.planId);
+
+		await this.userStorageService.resetBonus({ userId });
+		await this.userStorageService.addBonus({
+			userId,
+			size: plan.storageLimit,
+		});
+
 		const data = this.subscriptionRepo.create({ ...dto, userId });
 		return await this.subscriptionRepo.save(data);
 	}

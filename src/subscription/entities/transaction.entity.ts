@@ -42,7 +42,7 @@ export class Transaction extends BaseUUIDEntity {
 	@JoinColumn({ name: 'user_id' })
 	user: User;
 
-	@ManyToOne(() => UserSubscription)
+	@ManyToOne(() => UserSubscription, { onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'subscription_id' })
 	subscription: UserSubscription;
 }

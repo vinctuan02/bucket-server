@@ -6,6 +6,7 @@ import { Permission } from 'src/permission/entities/permission.entity';
 import { PermissionAction } from 'src/permission/enums/permission.enum';
 import { RolePermission } from 'src/role-permission/entities/role-permission.entity';
 import { Role } from 'src/role/entities/role.entity';
+import { Plan } from 'src/subscription/entities/plan.entity';
 import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { User } from 'src/users/entities/user.entity';
 import { hashPass } from 'src/users/util/user.ulti';
@@ -19,6 +20,7 @@ export class AppInitService implements OnApplicationBootstrap {
 	private readonly roleRepo: Repository<Role>;
 	private readonly permissionRepo: Repository<Permission>;
 	private readonly rolePermissionRepo: Repository<RolePermission>;
+	private readonly planRepo: Repository<Plan>;
 
 	constructor(
 		private readonly configService: ConfigService,
@@ -30,6 +32,7 @@ export class AppInitService implements OnApplicationBootstrap {
 		this.roleRepo = this.dataSource.getRepository(Role);
 		this.permissionRepo = this.dataSource.getRepository(Permission);
 		this.rolePermissionRepo = this.dataSource.getRepository(RolePermission);
+		this.planRepo = this.dataSource.getRepository(Plan);
 	}
 
 	async onApplicationBootstrap() {
@@ -38,6 +41,7 @@ export class AppInitService implements OnApplicationBootstrap {
 		await this.initPermissions();
 		await this.initRolePermissions();
 		await this.initializeUserRole();
+		await this.initPlans();
 	}
 
 	private async initUser() {
@@ -224,6 +228,55 @@ export class AppInitService implements OnApplicationBootstrap {
 		await this.userRoleRepo.save(userRoleEntity);
 
 		this.logger.log('User-Role (Admin) initialized successfully');
+	}
+
+	private async initPlans() {
+		const count = await this.planRepo.count();
+
+		if (count > 0) {
+			this.logger.verbose('Skip init plans (already exist)');
+			return;
+		}
+
+		const plans = [
+			{
+				name: 'Basic 100GB',
+				description: 'Perfect for getting started',
+				storageLimit: 107374182400, // 100GB in bytes
+				price: 29000, // VND
+				durationDays: 30,
+				isActive: true,
+			},
+			{
+				name: 'Pro 500GB',
+				description: 'Great for professionals',
+				storageLimit: 536870912000, // 500GB in bytes
+				price: 99000, // VND
+				durationDays: 30,
+				isActive: true,
+			},
+			{
+				name: 'Premium 1TB',
+				description: 'For power users',
+				storageLimit: 1099511627776, // 1TB in bytes
+				price: 199000, // VND
+				durationDays: 30,
+				isActive: true,
+			},
+			{
+				name: 'Enterprise 2TB',
+				description: 'For teams and businesses',
+				storageLimit: 2199023255552, // 2TB in bytes
+				price: 349000, // VND
+				durationDays: 30,
+				isActive: true,
+			},
+		];
+
+		const entities = this.planRepo.create(plans);
+		await this.planRepo.save(entities);
+
+		this.logger.log('Plans initialized successfully');
 	}
 }
 
