@@ -197,7 +197,6 @@ export class FileNodeDownloadService {
 		const buffer = await this.downloadFileToBuffer(url);
 		fs.writeFileSync(filePath, buffer);
 	}
-
 	private async downloadFileToBuffer(url: string): Promise<Buffer> {
 		const response = await fetch(url);
 		if (!response.ok) {
