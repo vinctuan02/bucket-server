@@ -125,6 +125,7 @@ export class AppInitService implements OnApplicationBootstrap {
 		const viewerRole = rolesFromDatabase.find(
 			(role) => role.name === 'Viewer',
 		);
+		const saleRole = rolesFromDatabase.find((role) => role.name === 'Sale');
 
 		if (!adminRole) {
 			this.logger.warn('Admin role not found, skip role-permission init');
@@ -143,6 +144,13 @@ export class AppInitService implements OnApplicationBootstrap {
 			);
 		}
 
+		if (!saleRole) {
+			this.logger.warn(
+				'Sale role not found, skip sale role-permission init',
+			);
+		}
+
+		// Admin: all permissions
 		const adminRolePermissions = permissionsFromDatabase.map((permission) =>
 			this.rolePermissionRepo.create({
 				roleId: adminRole.id,
@@ -150,6 +158,7 @@ export class AppInitService implements OnApplicationBootstrap {
 			}),
 		);
 
+		// User: file operations and profile access
 		let userRolePermissions: RolePermission[] = [];
 		if (userRole) {
 			const userPermissions = permissionsFromDatabase.filter(
@@ -160,6 +169,12 @@ export class AppInitService implements OnApplicationBootstrap {
 							PermissionAction.READ,
 						].includes(permission.action)) ||
 					(permission.resource === 'user' &&
+						permission.action === PermissionAction.READ) ||
+					(permission.resource === 'profile' &&
+						permission.action === PermissionAction.READ) ||
+					(permission.resource === 'storage' &&
+						permission.action === PermissionAction.READ) ||
+					(permission.resource === 'trash' &&
 						permission.action === PermissionAction.READ),
 			);
 
@@ -171,6 +186,7 @@ export class AppInitService implements OnApplicationBootstrap {
 			);
 		}
 
+		// Viewer: read-only access
 		let viewerRolePermissions: RolePermission[] = [];
 		if (viewerRole) {
 			const viewerPermissions = permissionsFromDatabase.filter(
@@ -185,10 +201,37 @@ export class AppInitService implements OnApplicationBootstrap {
 			);
 		}
 
+		// Sale: plans and subscription management
+		let saleRolePermissions: RolePermission[] = [];
+		if (saleRole) {
+			const salePermissions = permissionsFromDatabase.filter(
+				(permission) =>
+					(permission.resource === 'plan' &&
+						[
+							PermissionAction.READ,
+							PermissionAction.MANAGE,
+						].includes(permission.action)) ||
+					(permission.resource === 'subscription' &&
+						[
+							PermissionAction.READ,
+							PermissionAction.CREATE,
+							PermissionAction.UPDATE,
+						].includes(permission.action)),
+			);
+
+			saleRolePermissions = salePermissions.map((permission) =>
+				this.rolePermissionRepo.create({
+					roleId: saleRole.id,
+					permissionId: permission.id,
+				}),
+			);
+		}
+
 		await this.rolePermissionRepo.save([
 			...adminRolePermissions,
 			...userRolePermissions,
 			...viewerRolePermissions,
+			...saleRolePermissions,
 		]);
 
 		this.logger.log('Role-Permissions initialized successfully');
@@ -281,6 +324,7 @@ export class AppInitService implements OnApplicationBootstrap {
 }
 
 const permissions = [
+	// --- User management ---
 	{
 		name: 'Create User',
 		action: PermissionAction.CREATE,
@@ -331,6 +375,142 @@ const permissions = [
 		resource: 'file',
 		description: 'Allow deleting files',
 	},
+
+	// --- Role management ---
+	{
+		name: 'Read Role',
+		action: PermissionAction.READ,
+		resource: 'role',
+		description: 'Allow viewing roles',
+	},
+	{
+		name: 'Create Role',
+		action: PermissionAction.CREATE,
+		resource: 'role',
+		description: 'Allow creating new roles',
+	},
+	{
+		name: 'Update Role',
+		action: PermissionAction.UPDATE,
+		resource: 'role',
+		description: 'Allow editing roles',
+	},
+	{
+		name: 'Delete Role',
+		action: PermissionAction.DELETE,
+		resource: 'role',
+		description: 'Allow deleting roles',
+	},
+
+	// --- Permission management ---
+	{
+		name: 'Read Permission',
+		action: PermissionAction.READ,
+		resource: 'permission',
+		description: 'Allow viewing permissions',
+	},
+	{
+		name: 'Create Permission',
+		action: PermissionAction.CREATE,
+		resource: 'permission',
+		description: 'Allow creating new permissions',
+	},
+	{
+		name: 'Update Permission',
+		action: PermissionAction.UPDATE,
+		resource: 'permission',
+		description: 'Allow editing permissions',
+	},
+	{
+		name: 'Delete Permission',
+		action: PermissionAction.DELETE,
+		resource: 'permission',
+		description: 'Allow deleting permissions',
+	},
+
+	// --- Profile management ---
+	{
+		name: 'Read Profile',
+		action: PermissionAction.READ,
+		resource: 'profile',
+		description: 'Allow viewing user profile',
+	},
+	{
+		name: 'Update Profile',
+		action: PermissionAction.UPDATE,
+		resource: 'profile',
+		description: 'Allow editing user profile',
+	},
+
+	// --- Storage management ---
+	{
+		name: 'Read Storage',
+		action: PermissionAction.READ,
+		resource: 'storage',
+		description: 'Allow viewing storage information',
+	},
+
+	// --- Trash management ---
+	{
+		name: 'Read Trash',
+		action: PermissionAction.READ,
+		resource: 'trash',
+		description: 'Allow viewing trash',
+	},
+	{
+		name: 'Delete Trash',
+		action: PermissionAction.DELETE,
+		resource: 'trash',
+		description: 'Allow permanently deleting items from trash',
+	},
+
+	// --- Plan management ---
+	{
+		name: 'Read Plan',
+		action: PermissionAction.READ,
+		resource: 'plan',
+		description: 'Allow viewing storage plans',
+	},
+	{
+		name: 'Manage Plan',
+		action: PermissionAction.MANAGE,
+		resource: 'plan',
+		description: 'Allow managing storage plans',
+	},
+
+	// --- Subscription management ---
+	{
+		name: 'Read Subscription',
+		action: PermissionAction.READ,
+		resource: 'subscription',
+		description: 'Allow viewing subscriptions',
+	},
+	{
+		name: 'Create Subscription',
+		action: PermissionAction.CREATE,
+		resource: 'subscription',
+		description: 'Allow creating new subscriptions',
+	},
+	{
+		name: 'Update Subscription',
+		action: PermissionAction.UPDATE,
+		resource: 'subscription',
+		description: 'Allow updating subscriptions',
+	},
+
+	// --- Config management ---
+	{
+		name: 'Read Config',
+		action: PermissionAction.READ,
+		resource: 'config',
+		description: 'Allow viewing app configuration',
+	},
+	{
+		name: 'Update Config',
+		action: PermissionAction.UPDATE,
+		resource: 'config',
+		description: 'Allow updating app configuration',
+	},
 ];
 
 const roles = [
@@ -342,5 +522,8 @@ const roles = [
 	},
 	{
 		name: 'Viewer',
+	},
+	{
+		name: 'Sale',
 	},
 ];
