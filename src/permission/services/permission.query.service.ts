@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { PermissionResponse } from '../constants/permission.constant';
 import { GetListPermissionDto } from '../dto/permission.dto';
 import { Permission } from '../entities/permission.entity';
-import { PermissionAction } from '../enums/permission.enum';
+import { PermissionAction, Resource } from '../enums/permission.enum';
 
 @Injectable()
 export class PermissionQueryService {
@@ -42,7 +42,7 @@ export class PermissionQueryService {
 		return { items, totalItems };
 	}
 
-	async ensureNotExists(action: PermissionAction, resource: string) {
+	async ensureNotExists(action: PermissionAction, resource: Resource) {
 		const exists = await this.permissionRepo.findOne({
 			where: { action, resource },
 		});

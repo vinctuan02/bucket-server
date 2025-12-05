@@ -91,26 +91,69 @@ export class AuthService {
 		return result;
 	}
 
+	// async login(dto: LoginDto): Promise<IAuthToken> {
+	// 	const user = await this.authValidateService.validateLogin(dto);
+
+	// 	const roles = user.userRoles.map((ul) => ul.role.name);
+	// 	const permissions = Array.from(
+	// 		new Set(
+	// 			user.userRoles.flatMap((ul) =>
+	// 				ul.role.rolePermissions.map(
+	// 					(rp) =>
+	// 						rp.permission.action + ':' + rp.permission.resource,
+	// 				),
+	// 			),
+	// 		),
+	// 	);
+
+	// 	const accessToken = this.generateAccessToken({
+	// 		sub: user.id,
+	// 		email: user.email,
+	// 		roles,
+	// 		permissions,
+	// 	});
+	// 	const refreshToken = this.generateRefreshToken({
+	// 		sub: user.id,
+	// 		email: user.email,
+	// 	});
+
+	// 	return { accessToken, refreshToken };
+	// }
+
 	async login(dto: LoginDto): Promise<IAuthToken> {
 		const user = await this.authValidateService.validateLogin(dto);
 
 		const roles = user.userRoles.map((ul) => ul.role.name);
-		const permissions = Array.from(
-			new Set(
-				user.userRoles.flatMap((ul) =>
-					ul.role.rolePermissions.map(
-						(rp) =>
-							rp.permission.action + ':' + rp.permission.resource,
-					),
-				),
-			),
-		);
+
+		// 1. Tạo Map để lưu trữ và khử trùng lặp Permissions dưới dạng đối tượng
+		const uniquePermissionsMap = new Map<
+			string,
+			{ action: string; resource: string }
+		>();
+
+		user.userRoles.forEach((ul) => {
+			ul.role.rolePermissions.forEach((rp) => {
+				// Tạo key duy nhất để khử trùng lặp (ví dụ: "READ:USER")
+				const key = rp.permission.action + ':' + rp.permission.resource;
+
+				if (!uniquePermissionsMap.has(key)) {
+					// Thêm Permission dưới dạng đối tượng { action, resource }
+					uniquePermissionsMap.set(key, {
+						action: rp.permission.action,
+						resource: rp.permission.resource,
+					});
+				}
+			});
+		});
+
+		// 2. Chuyển Map values thành mảng để đưa vào JWT payload
+		const permissions = Array.from(uniquePermissionsMap.values());
 
 		const accessToken = this.generateAccessToken({
 			sub: user.id,
 			email: user.email,
 			roles,
-			permissions,
+			permissions, // permissions giờ là array of objects
 		});
 		const refreshToken = this.generateRefreshToken({
 			sub: user.id,

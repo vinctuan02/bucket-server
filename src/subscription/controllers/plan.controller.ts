@@ -38,6 +38,7 @@ export class PlanController {
 		description: 'Plan created successfully',
 		type: PlanResponseDto,
 	})
+	// @RequiredPermissions(APP_PERMISSIONS.)
 	async create(@Body() dto: CreatePlanDto) {
 		const data = await this.service.create(dto);
 		return new ResponseSuccess({ data });

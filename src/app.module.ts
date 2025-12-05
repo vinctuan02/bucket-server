@@ -7,7 +7,7 @@ import { AppInitService } from './app-init.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/guard/auth.guard';
+import { JwtAuthGuard, PermissionsGuard } from './auth/guard/auth.guard';
 import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
 import { validationSchema } from './common/config/common.validate-env';
@@ -59,9 +59,14 @@ import { UsersModule } from './users/user.module';
 	providers: [
 		AppService,
 		AppInitService,
+		PermissionsGuard,
 		{
 			provide: APP_GUARD,
 			useClass: JwtAuthGuard,
+		},
+		{
+			provide: APP_GUARD,
+			useClass: PermissionsGuard,
 		},
 	],
 })

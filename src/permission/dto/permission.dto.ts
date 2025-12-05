@@ -2,7 +2,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
-import { PermissionAction, PermissionFM } from '../enums/permission.enum';
+import {
+	PermissionAction,
+	PermissionFM,
+	Resource,
+} from '../enums/permission.enum';
 
 export class CreatePermissionDto {
 	@IsNotEmpty()
@@ -16,7 +20,7 @@ export class CreatePermissionDto {
 	action: PermissionAction;
 
 	@IsNotEmpty()
-	resource: string;
+	resource: Resource;
 }
 
 export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {}

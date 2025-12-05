@@ -2,7 +2,7 @@ import { DEFAULT_LENGTH_DESCRIPTION } from 'src/common/const/common.const';
 import { BaseUserUUIDEntity } from 'src/common/entities/common.entity';
 import { RolePermission } from 'src/role-permission/entities/role-permission.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { PermissionAction } from '../enums/permission.enum';
+import { PermissionAction, Resource } from '../enums/permission.enum';
 
 @Entity('permissions')
 export class Permission extends BaseUserUUIDEntity {
@@ -12,8 +12,8 @@ export class Permission extends BaseUserUUIDEntity {
 	@Column({ type: 'enum', enum: PermissionAction })
 	action: PermissionAction;
 
-	@Column()
-	resource: string;
+	@Column({ enum: Resource, type: 'enum' })
+	resource: Resource;
 
 	@Column({
 		type: 'varchar',

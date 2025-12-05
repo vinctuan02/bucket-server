@@ -11,3 +11,17 @@ export const RoleResponse = {
 };
 
 export const RoleFieldSimple = [RoleFM.ID, RoleFM.NAME, RoleFM.DESCRIPTION];
+
+export const ROLE_CONSTANTS = {
+	ADMIN: 'Admin',
+	USER: 'User',
+	VIEWER: 'Viewer',
+	SALE: 'Sale',
+};
+
+export const ROLES_SEED = [
+	{ name: ROLE_CONSTANTS.ADMIN },
+	{ name: ROLE_CONSTANTS.USER },
+	{ name: ROLE_CONSTANTS.VIEWER },
+	{ name: ROLE_CONSTANTS.SALE },
+];

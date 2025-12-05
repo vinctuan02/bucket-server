@@ -9,7 +9,7 @@ export interface IAuthPayload {
 	sub: string;
 	email: string;
 	roles?: string[];
-	permissions?: string[];
+	permissions?: { action: string; resource: string }[];
 	type: TypeToken;
 }
 
