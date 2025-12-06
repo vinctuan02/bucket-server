@@ -1,9 +1,14 @@
 // src/auth/auth.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import { generateSixDigitOtp } from 'src/common/util/common.util';
 import { NotificationService } from 'src/notification/services/notification.service';
+import { ROLE_CONSTANTS } from 'src/role/constant/role.constant';
+import { Role } from 'src/role/entities/role.entity';
+import { UserRoleService } from 'src/user-role/services/user-role.service';
 import { UsersService } from 'src/users/services/user.service';
+import { Repository } from 'typeorm';
 import { AuthResponseError } from '../constant/auth.const';
 import {
 	LoginDto,
@@ -30,6 +35,10 @@ export class AuthService {
 		private readonly jwtService: JwtService,
 		private readonly authValidateService: AuthValidateService,
 		private readonly notificationService: NotificationService,
+		private readonly userRoleService: UserRoleService,
+
+		@InjectRepository(Role)
+		private readonly roleRepo: Repository<Role>,
 	) {}
 
 	// google
@@ -55,6 +64,19 @@ export class AuthService {
 
 	async register(dto: RegisterDto) {
 		const newUser = await this.usersService.create(dto);
+
+		// Assign User role by default
+		const userRole = await this.roleRepo.findOne({
+			where: { name: ROLE_CONSTANTS.USER },
+		});
+
+		if (userRole) {
+			await this.userRoleService.createSafe({
+				userId: newUser.id,
+				roleId: userRole.id,
+			});
+		}
+
 		const { code } = this.createVerificationCode(newUser.id);
 
 		this.notificationService
@@ -90,35 +112,6 @@ export class AuthService {
 		this.verificationCodes.delete(userId);
 		return result;
 	}
-
-	// async login(dto: LoginDto): Promise<IAuthToken> {
-	// 	const user = await this.authValidateService.validateLogin(dto);
-
-	// 	const roles = user.userRoles.map((ul) => ul.role.name);
-	// 	const permissions = Array.from(
-	// 		new Set(
-	// 			user.userRoles.flatMap((ul) =>
-	// 				ul.role.rolePermissions.map(
-	// 					(rp) =>
-	// 						rp.permission.action + ':' + rp.permission.resource,
-	// 				),
-	// 			),
-	// 		),
-	// 	);
-
-	// 	const accessToken = this.generateAccessToken({
-	// 		sub: user.id,
-	// 		email: user.email,
-	// 		roles,
-	// 		permissions,
-	// 	});
-	// 	const refreshToken = this.generateRefreshToken({
-	// 		sub: user.id,
-	// 		email: user.email,
-	// 	});
-
-	// 	return { accessToken, refreshToken };
-	// }
 
 	async login(dto: LoginDto): Promise<IAuthToken> {
 		const user = await this.authValidateService.validateLogin(dto);

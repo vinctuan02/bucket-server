@@ -22,10 +22,12 @@ import {
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import * as fs from 'fs';
+import { RequiredPermissions } from 'src/auth/decorator/auth.decorator';
 import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import type { CurrentUser } from 'src/common/interface/common.interface';
 import { UpsertFileNodePermissionDto } from 'src/file-node-permission/dto/file-node-permission.dto';
+import { APP_PERMISSIONS } from 'src/permission/constants/permission.constant';
 import {
 	BulkUpdateFileNodePermissionDto,
 	CreateFileDto,
@@ -45,6 +47,7 @@ export class FileManagerController {
 	) {}
 
 	@Post('folder')
+	@RequiredPermissions(APP_PERMISSIONS.CREATE_FILE_NODE)
 	@ApiOperation({ summary: 'Create a new folder' })
 	@ApiBody({ type: CreateFolderDto })
 	@ApiResponse({ status: 201, description: 'Folder created successfully' })
@@ -54,6 +57,7 @@ export class FileManagerController {
 	}
 
 	@Post('file')
+	@RequiredPermissions(APP_PERMISSIONS.CREATE_FILE_NODE)
 	@ApiOperation({ summary: 'Create a new file' })
 	@ApiBody({ type: CreateFileDto })
 	@ApiResponse({ status: 201, description: 'File created successfully' })
@@ -63,6 +67,7 @@ export class FileManagerController {
 	}
 
 	@Post(':id/permission')
+	@RequiredPermissions(APP_PERMISSIONS.UPDATE_FILE_NODE)
 	@ApiOperation({ summary: 'Add or update permission for a file/folder' })
 	@ApiParam({
 		name: 'id',
@@ -88,6 +93,7 @@ export class FileManagerController {
 	}
 
 	@Put(':id/bulk/permission')
+	@RequiredPermissions(APP_PERMISSIONS.UPDATE_FILE_NODE)
 	@ApiOperation({ summary: 'Bulk update permissions for multiple users' })
 	@ApiParam({
 		name: 'id',
@@ -113,6 +119,7 @@ export class FileManagerController {
 	}
 
 	@Put(':id/restore')
+	@RequiredPermissions(APP_PERMISSIONS.UPDATE_FILE_NODE)
 	@ApiOperation({ summary: 'Restore file/folder from trash' })
 	@ApiParam({
 		name: 'id',
@@ -129,6 +136,7 @@ export class FileManagerController {
 	}
 
 	@Get()
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get list of files/folders' })
 	@ApiQuery({ type: GetListFileNodeDto })
 	@ApiResponse({ status: 200, description: 'List of files/folders' })
@@ -141,6 +149,7 @@ export class FileManagerController {
 	}
 
 	@Get('trash')
+	@RequiredPermissions(APP_PERMISSIONS.READ_TRASH)
 	@ApiOperation({ summary: 'Get trashed files and folders' })
 	@ApiQuery({ type: GetListFileNodeDto })
 	@ApiResponse({
@@ -159,6 +168,7 @@ export class FileManagerController {
 	}
 
 	@Get('share-with-me')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({
 		summary: 'Get files and folders shared with the current user',
 	})
@@ -179,6 +189,7 @@ export class FileManagerController {
 	}
 
 	@Get('home')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get home directory (root folder)' })
 	@ApiQuery({ type: GetListFileNodeDto })
 	@ApiResponse({ status: 200, description: 'Home directory contents' })
@@ -188,6 +199,7 @@ export class FileManagerController {
 	}
 
 	@Get('with-children')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get files/folders with immediate children' })
 	@ApiQuery({ type: GetListFileNodeDto })
 	@ApiResponse({ status: 200, description: 'Files/folders with children' })
@@ -200,6 +212,7 @@ export class FileManagerController {
 	}
 
 	@Get('full-tree')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get complete folder tree structure' })
 	@ApiQuery({ type: GetListFileNodeDto })
 	@ApiResponse({ status: 200, description: 'Complete folder tree' })
@@ -212,6 +225,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get file/folder details by ID' })
 	@ApiParam({
 		name: 'id',
@@ -225,6 +239,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/with-permission')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get file/folder with permission details' })
 	@ApiParam({
 		name: 'id',
@@ -238,6 +253,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/permissions')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get all permissions for a file/folder' })
 	@ApiParam({
 		name: 'id',
@@ -251,6 +267,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/children')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get immediate children of a folder' })
 	@ApiParam({ name: 'id', type: 'string', description: 'Folder ID (UUID)' })
 	@ApiQuery({ type: GetListFileNodeDto })
@@ -269,6 +286,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/breadcrumbs')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get breadcrumb path to file/folder' })
 	@ApiParam({
 		name: 'id',
@@ -282,6 +300,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/with-children')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get file/folder with immediate children' })
 	@ApiParam({
 		name: 'id',
@@ -295,6 +314,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/full-tree')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Get file/folder with complete tree structure' })
 	@ApiParam({
 		name: 'id',
@@ -308,6 +328,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/read')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({ summary: 'Read file content' })
 	@ApiParam({ name: 'id', type: 'string', description: 'File ID (UUID)' })
 	@ApiResponse({ status: 200, description: 'File content' })
@@ -317,6 +338,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/zip')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({
 		summary: 'Create zip file for download',
 		description:
@@ -340,6 +362,7 @@ export class FileManagerController {
 	}
 
 	@Get(':id/download/:path')
+	@RequiredPermissions(APP_PERMISSIONS.READ_FILE_NODE)
 	@ApiOperation({
 		summary: 'Download zip file by path',
 		description:
@@ -400,6 +423,7 @@ export class FileManagerController {
 	}
 
 	@Delete(':id')
+	@RequiredPermissions(APP_PERMISSIONS.DELETE_FILE_NODE)
 	@ApiOperation({ summary: 'Soft delete file/folder (move to trash)' })
 	@ApiParam({
 		name: 'id',
@@ -415,6 +439,7 @@ export class FileManagerController {
 	}
 
 	@Delete(':id/permanent')
+	@RequiredPermissions(APP_PERMISSIONS.DELETE_FILE_NODE)
 	@ApiOperation({ summary: 'Permanently delete file/folder' })
 	@ApiParam({
 		name: 'id',

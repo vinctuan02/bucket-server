@@ -29,4 +29,38 @@ export class UserRoleService {
 	async deleteByUserId(userId: string) {
 		await this.userRoleRepo.delete({ userId });
 	}
+
+	async getUserPermissions(
+		userId: string,
+	): Promise<{ action: string; resource: string }[]> {
+		const userRoles = await this.userRoleRepo
+			.createQueryBuilder('ur')
+			.leftJoinAndSelect('ur.role', 'role')
+			.leftJoinAndSelect('role.rolePermissions', 'rp')
+			.leftJoinAndSelect('rp.permission', 'permission')
+			.where('ur.userId = :userId', { userId })
+			.getMany();
+
+		// Extract unique permissions from all roles
+		const permissionsMap = new Map<
+			string,
+			{ action: string; resource: string }
+		>();
+
+		userRoles.forEach((ur) => {
+			if (ur.role?.rolePermissions) {
+				ur.role.rolePermissions.forEach((rp) => {
+					const key = `${rp.permission.action}:${rp.permission.resource}`;
+					if (!permissionsMap.has(key)) {
+						permissionsMap.set(key, {
+							action: rp.permission.action,
+							resource: rp.permission.resource,
+						});
+					}
+				});
+			}
+		});
+
+		return Array.from(permissionsMap.values());
+	}
 }

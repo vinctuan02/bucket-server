@@ -1,4 +1,8 @@
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
+import {
+	PermissionAction,
+	Resource,
+} from 'src/permission/enums/permission.enum';
 
 export class OrmFilterDto extends BaseQueryDto {
 	keywordsUser?: string[];
@@ -10,6 +14,9 @@ export class OrmFilterDto extends BaseQueryDto {
 	fileNodeParentId?: string;
 	fileNodeIsDelete?: boolean;
 	fileNodeId?: string;
+
+	permissionActions?: PermissionAction[];
+	resources?: Resource[];
 
 	constructor(partial?: Partial<OrmFilterDto>) {
 		super();

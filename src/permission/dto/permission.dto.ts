@@ -1,6 +1,7 @@
 // src/permissions/dto/permission.dto.ts
 import { PartialType } from '@nestjs/mapped-types';
 import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
+import { StringToArrayString } from 'src/common/decorators/common.decorator';
 import { BaseQueryDto } from 'src/common/dto/common.query-dto';
 import {
 	PermissionAction,
@@ -29,4 +30,14 @@ export class GetListPermissionDto extends BaseQueryDto {
 	@IsOptional()
 	@IsEnum(PermissionFM)
 	fieldOrder: PermissionFM = PermissionFM.NAME;
+
+	@StringToArrayString()
+	@IsOptional()
+	// @IsEnum(PermissionAction)
+	permissionActions?: PermissionAction[];
+
+	@StringToArrayString()
+	@IsOptional()
+	// @IsEnum(Resource)
+	resources?: Resource[];
 }

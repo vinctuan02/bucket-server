@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { FileNodeFM } from 'src/file-node/fm/file-node.fm';
-import { PermissionFM } from 'src/permission/enums/permission.enum';
+import {
+	PermissionAction,
+	PermissionFM,
+	Resource,
+} from 'src/permission/enums/permission.enum';
 import { UserFM } from 'src/users/enum/user.enum';
 import { Brackets, SelectQueryBuilder } from 'typeorm';
 import { RoleFM } from '../../role/constant/orm.role.fm';
@@ -29,6 +33,9 @@ export class OrmUtilsWhere {
 			fileNodeParentId,
 			fileNodeIsDelete,
 
+			permissionActions,
+			resources,
+
 			fileNodeId,
 		} = filter;
 
@@ -41,6 +48,8 @@ export class OrmUtilsWhere {
 		this.andWherePlanKeywords({ qb, keywords: keywordsPlan });
 		this.andWhereFileNodeParentId({ qb, fileNodeParentId });
 		this.andWhereFileNodeIsDelete({ qb, fileNodeIsDelete });
+		this.andWhere_Permission_Action({ qb, permissionActions });
+		this.andWhere_Permission_Resource({ qb, resources });
 	}
 
 	andWhereUserKeywords({
@@ -99,9 +108,9 @@ export class OrmUtilsWhere {
 
 						const condition = `
                             (${PermissionFM.NAME} ILIKE :${paramName})
-                            OR (${PermissionFM.RESOURCE} ILIKE :${paramName})
+                            OR (CAST(${PermissionFM.RESOURCE} AS TEXT) ILIKE :${paramName})
                             OR (CAST(${PermissionFM.DESCRIPTION} AS TEXT) ILIKE :${paramName})
-                            OR (${PermissionFM.ACTION} ILIKE :${paramName})
+                            OR (CAST(${PermissionFM.ACTION} AS TEXT) ILIKE :${paramName})
                         `;
 
 						if (index === 0) {
@@ -283,5 +292,46 @@ export class OrmUtilsWhere {
 		}
 
 		return qb;
+	}
+
+	private andWhere_Permission_Action({
+		qb,
+		permissionActions,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		permissionActions?: PermissionAction[];
+	}) {
+		if (permissionActions !== undefined) {
+			if (permissionActions.length > 0) {
+				// Chỉ thêm mệnh đề IN khi mảng có phần tử
+				qb.andWhere(
+					`${PermissionFM.ACTION} IN (:...permissionActions)`,
+					{
+						permissionActions,
+					},
+				);
+			} else {
+				qb.andWhere('1 = 0');
+			}
+		}
+	}
+
+	private andWhere_Permission_Resource({
+		qb,
+		resources,
+	}: {
+		qb: SelectQueryBuilder<any>;
+		resources?: Resource[];
+	}) {
+		if (resources !== undefined) {
+			if (resources.length > 0) {
+				// Chỉ thêm mệnh đề IN khi mảng có phần tử
+				qb.andWhere(`${PermissionFM.RESOURCE} IN (:...resources)`, {
+					resources,
+				});
+			} else {
+				qb.andWhere('1 = 0');
+			}
+		}
 	}
 }

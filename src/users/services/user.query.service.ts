@@ -45,6 +45,11 @@ export class UserQueryService {
 
 		if (!user) throw new ResponseError({ message: `User ${id} not found` });
 
+		// Ensure userRoles is an array even if empty
+		if (!user.userRoles) {
+			user.userRoles = [];
+		}
+
 		return user;
 	}
 
