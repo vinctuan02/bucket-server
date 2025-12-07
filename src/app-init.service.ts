@@ -220,6 +220,9 @@ export class AppInitService implements OnApplicationBootstrap {
 					(permission.resource === Resource.PLAN &&
 						[
 							PermissionAction.READ,
+							PermissionAction.CREATE,
+							PermissionAction.UPDATE,
+							PermissionAction.DELETE,
 							PermissionAction.MANAGE,
 						].includes(permission.action)) ||
 					// Subscription Management (CRUD)

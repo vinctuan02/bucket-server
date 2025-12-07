@@ -57,6 +57,17 @@ export class AuthService {
 				providerId,
 				avatar,
 			});
+
+			const userRole = await this.roleRepo.findOne({
+				where: { name: ROLE_CONSTANTS.USER },
+			});
+
+			if (userRole) {
+				await this.userRoleService.createSafe({
+					userId: user.id,
+					roleId: userRole.id,
+				});
+			}
 		}
 
 		return this.generateTokens({ sub: user.id, email: user.email });

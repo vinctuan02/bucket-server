@@ -172,6 +172,24 @@ export const APP_PERMISSIONS = {
 		resource: Resource.PLAN,
 		description: 'Allow viewing storage plans',
 	},
+	CREATE_PLAN: {
+		name: 'Create Plan',
+		action: PermissionAction.CREATE,
+		resource: Resource.PLAN,
+		description: 'Allow creating new storage plans',
+	},
+	UPDATE_PLAN: {
+		name: 'Update Plan',
+		action: PermissionAction.UPDATE,
+		resource: Resource.PLAN,
+		description: 'Allow editing storage plans',
+	},
+	DELETE_PLAN: {
+		name: 'Delete Plan',
+		action: PermissionAction.DELETE,
+		resource: Resource.PLAN,
+		description: 'Allow deleting storage plans',
+	},
 	MANAGE_PLAN: {
 		name: 'Manage Plan',
 		action: PermissionAction.MANAGE,
