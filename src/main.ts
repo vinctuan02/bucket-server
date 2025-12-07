@@ -1,15 +1,22 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as express from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+	const app = await NestFactory.create(AppModule, {
+		rawBody: true, // Enable raw body for webhook signature verification
+	});
 	app.enableCors({
 		origin: true,
 		credentials: true,
 	});
+
+	// Configure raw body for webhook endpoint
+	app.use('/sepay/webhook', express.json({ verify: rawBodyBuffer }));
+	app.use(express.json());
 	app.useGlobalFilters(new HttpExceptionFilter());
 	app.useGlobalPipes(
 		new ValidationPipe({
@@ -31,4 +38,12 @@ async function bootstrap() {
 
 	await app.listen(process.env.PORT ?? 3000);
 }
+
+// Helper function to preserve raw body for webhook signature verification
+function rawBodyBuffer(req: any, res: any, buf: Buffer, encoding: string) {
+	if (buf && buf.length) {
+		req.rawBody = buf;
+	}
+}
+
 void bootstrap();
