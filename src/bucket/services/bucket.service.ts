@@ -21,7 +21,7 @@ export class BucketService {
 	) {}
 
 	async getUploadUrl(input: GetUploadUrlDto): Promise<BucketDto> {
-		const { keyMap, folderBucket, fileName } = input;
+		const { keyMap, folderBucket, fileName, isPublic } = input;
 
 		const key = this.getKey({
 			previousKey: this.getPreviousKey(folderBucket),
@@ -33,9 +33,12 @@ export class BucketService {
 			key,
 		});
 
+		const bucket = isPublic ? 'public' : 'private';
+
 		return {
 			id: file.id,
 			uploadUrl: await this.bucketMinioService.getUploadUrl({
+				bucket,
 				key,
 			}),
 

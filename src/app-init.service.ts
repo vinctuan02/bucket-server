@@ -14,6 +14,7 @@ import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { User } from 'src/users/entities/user.entity';
 import { hashPass } from 'src/users/util/user.ulti';
 import { DataSource, Repository } from 'typeorm';
+import { AppConfigService } from './app-config/services/app-config.service';
 import { PERMISSIONS_SEED } from './permission/constants/permission.constant';
 import { ROLE_CONSTANTS, ROLES_SEED } from './role/constant/role.constant';
 
@@ -31,6 +32,7 @@ export class AppInitService implements OnApplicationBootstrap {
 		private readonly configService: ConfigService,
 		private readonly dataSource: DataSource,
 		private readonly eventEmitter: EventEmitter2,
+		private readonly appConfigService: AppConfigService,
 	) {
 		this.userRepo = this.dataSource.getRepository(User);
 		this.userRoleRepo = this.dataSource.getRepository(UserRole);
@@ -47,6 +49,7 @@ export class AppInitService implements OnApplicationBootstrap {
 		await this.initRolePermissions();
 		await this.initializeUserRole();
 		await this.initPlans();
+		await this.appConfigService.initializeDefaultConfig();
 	}
 
 	private async initUser() {

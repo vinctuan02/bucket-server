@@ -56,8 +56,8 @@ export class GetUploadUrlDto {
 	@IsOptional()
 	keyMap?: string;
 
-	// @IsNotEmpty()
-	// bucket: string;
+	// @IsOptional()
+	// bucket?: string;
 
 	@IsNotEmpty()
 	@ValidateNested({ each: true })
@@ -67,6 +67,9 @@ export class GetUploadUrlDto {
 	@IsOptional()
 	@IsBoolean()
 	isSubmitted?: boolean;
+
+	@IsOptional()
+	isPublic?: boolean = false;
 }
 
 export class GetListFileBucketDto extends BaseQueryDto {}
