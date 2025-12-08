@@ -19,14 +19,14 @@ export class PaymentDemoController {
 	constructor(private readonly paymentService: PaymentService) {}
 
 	/**
-	 * Demo checkout - không cần SePay
+	 * Demo checkout - uses real Sepay integration
 	 */
 	@Post('checkout')
 	@UseGuards(JwtAuthGuard)
 	@ApiOperation({ summary: 'Demo payment checkout' })
 	async checkout(@Req() req: any, @Body() dto: CheckoutDto) {
 		const userId = req.user.id;
-		return this.paymentService.initiateCheckoutDemo(userId, dto.planId);
+		return this.paymentService.initiateCheckout(userId, dto.planId);
 	}
 
 	/**

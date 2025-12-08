@@ -26,4 +26,10 @@ export const validationSchema = Joi.object({
 	GOOGLE_CLIENT_ID: Joi.string().required(),
 	GOOGLE_CLIENT_SECRET: Joi.string().required(),
 	GOOGLE_CALLBACK_URL: Joi.string().required(),
+
+	SEPAY_MERCHANT_ID: Joi.string().required(),
+	SEPAY_SECRET_KEY: Joi.string().required(),
+	SEPAY_BASE_URL: Joi.string().uri().required(),
+	SEPAY_CALLBACK_URL: Joi.string().uri().required(),
+	SEPAY_RETURN_URL: Joi.string().uri().required(),
 });
