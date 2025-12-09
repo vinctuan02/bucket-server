@@ -16,7 +16,9 @@ import {
 	ApiResponse,
 	ApiTags,
 } from '@nestjs/swagger';
+import { RequiredPermissions } from 'src/auth/decorator/auth.decorator';
 import { PageDto, ResponseSuccess } from 'src/common/dto/common.response-dto';
+import { APP_PERMISSIONS } from 'src/permission/constants/permission.constant';
 import {
 	CreatePlanDto,
 	GetListPlanDto,
@@ -38,13 +40,14 @@ export class PlanController {
 		description: 'Plan created successfully',
 		type: PlanResponseDto,
 	})
-	// @RequiredPermissions(APP_PERMISSIONS.)
+	@RequiredPermissions(APP_PERMISSIONS.CREATE_PLAN)
 	async create(@Body() dto: CreatePlanDto) {
 		const data = await this.service.create(dto);
 		return new ResponseSuccess({ data });
 	}
 
 	@Get()
+	@RequiredPermissions(APP_PERMISSIONS.READ_PLAN)
 	@ApiOperation({
 		summary: 'Get list of plans with pagination and filtering',
 	})
@@ -60,6 +63,7 @@ export class PlanController {
 	}
 
 	@Get(':id')
+	@RequiredPermissions(APP_PERMISSIONS.READ_PLAN)
 	@ApiOperation({ summary: 'Get plan by ID' })
 	@ApiParam({ name: 'id', type: 'string', description: 'Plan ID (UUID)' })
 	@ApiResponse({
@@ -74,6 +78,7 @@ export class PlanController {
 	}
 
 	@Put(':id')
+	@RequiredPermissions(APP_PERMISSIONS.UPDATE_PLAN)
 	@ApiOperation({ summary: 'Update plan' })
 	@ApiParam({ name: 'id', type: 'string', description: 'Plan ID (UUID)' })
 	@ApiBody({ type: UpdatePlanDto })
@@ -88,6 +93,7 @@ export class PlanController {
 	}
 
 	@Delete(':id')
+	@RequiredPermissions(APP_PERMISSIONS.DELETE_PLAN)
 	@ApiOperation({ summary: 'Delete plan' })
 	@ApiParam({ name: 'id', type: 'string', description: 'Plan ID (UUID)' })
 	@ApiResponse({ status: 200, description: 'Plan deleted successfully' })

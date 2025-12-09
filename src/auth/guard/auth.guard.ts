@@ -80,6 +80,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 // }
 
 // NEW: Check permissions from database
+import {
+	PermissionAction,
+	Resource,
+} from 'src/permission/enums/permission.enum';
 import { UsersService } from 'src/users/services/user.service';
 
 @Injectable()
@@ -112,7 +116,10 @@ export class PermissionsGuard implements CanActivate {
 			const user = await this.usersService.findOneWithPermissions(userId);
 
 			// Extract permissions from user roles
-			const userPermissions: { action: string; resource: string }[] = [];
+			const userPermissions: {
+				action: PermissionAction;
+				resource: Resource;
+			}[] = [];
 			if (user.userRoles) {
 				user.userRoles.forEach((ur) => {
 					if (ur.role?.rolePermissions) {
