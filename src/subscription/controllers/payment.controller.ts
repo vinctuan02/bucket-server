@@ -12,18 +12,17 @@ export class PaymentController {
 	constructor(private readonly paymentService: PaymentService) {}
 
 	/**
-	 * 🎯 GIAI ĐOẠN I: Khởi tạo Đơn hàng
-	 * Endpoint để khởi tạo thanh toán
+	 * Initiate payment checkout
+	 * Creates Transaction and Subscription, returns payment URL
 	 */
 	@Post('checkout')
 	@ApiOperation({ summary: 'Initiate payment checkout' })
 	async checkout(@User() user: CurrentUser, @Body() dto: CheckoutDto) {
-		const userId = user.userId;
-		return this.paymentService.initiateCheckout(userId, dto.planId);
+		return this.paymentService.initiateCheckout(user.userId, dto.planId);
 	}
 
 	/**
-	 * Kiểm tra trạng thái thanh toán (cho frontend polling)
+	 * Check payment status (for frontend polling)
 	 */
 	@Get('status/:transactionId')
 	@ApiOperation({ summary: 'Check payment status' })
