@@ -10,8 +10,11 @@ import {
 	Query,
 } from '@nestjs/common';
 import { RequiredPermissions } from 'src/auth/decorator/auth.decorator';
+import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
+import type { CurrentUser } from 'src/common/interface/common.interface';
 import { APP_PERMISSIONS } from 'src/permission/constants/permission.constant';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateUserDto, GetListUserDto, UpdateUserDto } from './dto/user.dto';
 import { UsersService } from './services/user.service';
 
@@ -58,6 +61,40 @@ export class UsersController {
 	@RequiredPermissions(APP_PERMISSIONS.DELETE_USER)
 	async remove(@Param('id') id: string) {
 		const data = await this.usersService.remove(id);
+		return new ResponseSuccess({ data });
+	}
+
+	@Get('profile/me')
+	@RequiredPermissions(APP_PERMISSIONS.READ_PROFILE)
+	async getProfile(@User() currentUser: CurrentUser) {
+		const data = await this.usersService.findOne(currentUser.userId);
+		return new ResponseSuccess({ data });
+	}
+
+	@Patch('profile/me')
+	@RequiredPermissions(APP_PERMISSIONS.UPDATE_PROFILE)
+	async updateProfile(
+		@User() currentUser: CurrentUser,
+		@Body() dto: UpdateProfileDto,
+	) {
+		const data = await this.usersService.updateProfile(
+			currentUser.userId,
+			dto,
+		);
+		return new ResponseSuccess({ data });
+	}
+
+	@Post('profile/avatar-upload-url')
+	@RequiredPermissions(APP_PERMISSIONS.UPDATE_PROFILE)
+	async getAvatarUploadUrl(
+		@Body()
+		fileMetadata: {
+			fileName: string;
+			fileSize: number;
+			contentType: string;
+		},
+	) {
+		const data = await this.usersService.getAvatarUploadUrl(fileMetadata);
 		return new ResponseSuccess({ data });
 	}
 }

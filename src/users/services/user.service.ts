@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AppEventType } from 'src/app-event/enum/app-event.enum';
+import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
+import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
 import { UserRoleService } from 'src/user-role/services/user-role.service';
 import { Repository } from 'typeorm';
@@ -19,6 +22,8 @@ export class UsersService {
 		private readonly userQueryService: UserQueryService,
 		private readonly userRolesService: UserRoleService,
 		private readonly eventEmitter: EventEmitter2,
+		private readonly bucketService: BucketService,
+		private readonly configService: ConfigService,
 	) {}
 
 	async handleCreate(dto: CreateUserDto) {
@@ -122,5 +127,59 @@ export class UsersService {
 	async remove(id: string): Promise<void> {
 		await this.eventEmitter.emitAsync(AppEventType.USER_DELETE, id);
 		await this.userRepo.delete(id);
+	}
+
+	async updateProfile(
+		userId: string,
+		dto: Partial<{
+			name: string;
+			avatar: string;
+			trashRetentionDays: number | null;
+		}>,
+	): Promise<User> {
+		const user = await this.findOne(userId);
+
+		// Only update provided fields
+		if (dto.name !== undefined) {
+			user.name = dto.name;
+		}
+		if (dto.avatar !== undefined) {
+			user.avatar = dto.avatar;
+		}
+		if (dto.trashRetentionDays !== undefined) {
+			user.trashRetentionDays = dto.trashRetentionDays;
+		}
+
+		return await this.userRepo.save(user);
+	}
+
+	async getAvatarUploadUrl(fileMetadata: {
+		fileName: string;
+		fileSize: number;
+		contentType: string;
+	}): Promise<{ uploadUrl: string; avatarUrl: string }> {
+		const { fileName, fileSize, contentType } = fileMetadata;
+
+		// Get upload URL for public bucket
+		const { uploadUrl, key } = await this.bucketService.getUploadUrl({
+			fileName,
+			fileSize,
+			contentType,
+			extension: fileName.split('.').pop() || '',
+			folderBucket: { uploadPurpose: UploadPurpose.CASE_1 },
+			isPublic: true, // Upload to public bucket
+		});
+
+		// Construct public URL
+		const minioEndpoint = this.configService.get<string>('MINIO_HOST');
+		const minioPort = this.configService.get<string>('MINIO_PORT');
+		const bucketName = 'public';
+
+		const avatarUrl = `http://${minioEndpoint}:${minioPort}/${bucketName}/${key}`;
+
+		return {
+			uploadUrl: uploadUrl ?? '',
+			avatarUrl,
+		};
 	}
 }

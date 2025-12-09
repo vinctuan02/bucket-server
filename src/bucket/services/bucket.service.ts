@@ -41,6 +41,7 @@ export class BucketService {
 				bucket,
 				key,
 			}),
+			key: file.key,
 
 			keyMap,
 		};

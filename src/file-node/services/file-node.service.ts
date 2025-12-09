@@ -3,8 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import dayjs from 'dayjs';
 import type { Request } from 'express';
+import { DEFAULT_TRASH_RETENTION_DAYS } from 'src/app-config/const/app-config.const';
+import { AppConfigService } from 'src/app-config/services/app-config.service';
 import { UploadPurpose } from 'src/bucket/enum/bucket.enum';
 import { BucketService } from 'src/bucket/services/bucket.service';
 import { PageDto } from 'src/common/dto/common.response-dto';
@@ -19,7 +20,8 @@ import { OrmUtilsJoin } from 'src/orm-utils/services/orm-utils.join';
 import { OrmUtilsSelect } from 'src/orm-utils/services/orm-utils.select';
 import { OrmUtilsWhere } from 'src/orm-utils/services/orm-utils.where';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
-import { Brackets, LessThanOrEqual, TreeRepository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { Brackets, LessThanOrEqual, Repository, TreeRepository } from 'typeorm';
 import { FileNodeResponseError } from '../const/file-node.const';
 import {
 	BulkUpdateFileNodePermissionDto,
@@ -38,6 +40,9 @@ export class FileManagerService {
 		@InjectRepository(FileNode)
 		private readonly fileNodeRepo: TreeRepository<FileNode>,
 
+		@InjectRepository(User)
+		private readonly userRepo: Repository<User>,
+
 		private readonly configService: ConfigService,
 
 		private readonly bucketSv: BucketService,
@@ -49,6 +54,7 @@ export class FileManagerService {
 		private readonly userStorageService: UserStorageService,
 		private readonly fileNodePermissionSv: FileNodePermissionService,
 		private readonly ormUtilsJoin: OrmUtilsJoin,
+		private readonly appConfigService: AppConfigService,
 	) {}
 
 	// create
@@ -603,11 +609,21 @@ export class FileManagerService {
 		const entity = await this.findOneWithChildren(id);
 
 		const now = new Date();
-		// const isExistInTrash = await this.validateUniqueConstraint({
 
-		// })
+		// Get retention period for the file owner
+		const retentionDays = await this.getRetentionPeriod(entity.ownerId);
 
-		await this.fileNodeRepo.update(id, { deletedAt: now, isDelete: true });
+		// Calculate scheduled deletion date
+		const scheduledDeletionAt = new Date(now);
+		scheduledDeletionAt.setDate(
+			scheduledDeletionAt.getDate() + retentionDays,
+		);
+
+		await this.fileNodeRepo.update(id, {
+			deletedAt: now,
+			isDelete: true,
+			scheduledDeletionAt,
+		});
 
 		if (entity.fileNodeChildren?.length) {
 			await Promise.all(
@@ -641,20 +657,29 @@ export class FileManagerService {
 
 	@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
 	async handleCron() {
-		const days = this.configService.get<number>('TRASH_EXPIRE_DAYS', 30);
-		const limitDate = dayjs().subtract(days, 'day').toDate();
+		const now = new Date();
 
-		const oldFiles = await this.fileNodeRepo.find({
-			where: { deletedAt: LessThanOrEqual(limitDate) },
+		const expiredFiles = await this.fileNodeRepo.find({
+			where: {
+				scheduledDeletionAt: LessThanOrEqual(now),
+				isDelete: true,
+			},
 		});
 
-		for (const file of oldFiles) {
+		this.logger.log(`Found ${expiredFiles.length} expired files to delete`);
+
+		for (const file of expiredFiles) {
 			try {
 				await this.deletePermanent(file.id);
+				this.logger.verbose(`Successfully deleted file ${file.id}`);
 			} catch (e) {
 				this.logger.error(`Delete failed for ${file.id}`, e);
 			}
 		}
+
+		this.logger.log(
+			`Cron job completed. Processed ${expiredFiles.length} files`,
+		);
 	}
 
 	async restore(id: string) {
@@ -663,6 +688,7 @@ export class FileManagerService {
 		await this.fileNodeRepo.update(id, {
 			deletedAt: null,
 			isDelete: false,
+			scheduledDeletionAt: null,
 		});
 
 		if (entity.fileNodeChildren?.length) {
@@ -677,6 +703,34 @@ export class FileManagerService {
 	async deleteByUserId(userId: string) {
 		await this.fileNodeRepo.delete({ ownerId: userId });
 		await this.userStorageService.deleteByUserId(userId);
+	}
+
+	async getRetentionPeriod(userId: string): Promise<number> {
+		// 1. Check user's personal retention period
+		const user = await this.userRepo.findOne({
+			where: { id: userId },
+			select: ['id', 'trashRetentionDays'],
+		});
+
+		if (user?.trashRetentionDays) {
+			return user.trashRetentionDays;
+		}
+
+		// 2. Fall back to app config
+		try {
+			const config = await this.appConfigService.getConfig();
+			if (config.trashRetentionDays) {
+				return config.trashRetentionDays;
+			}
+		} catch (error) {
+			this.logger.warn(
+				'Failed to fetch app config, using default',
+				error,
+			);
+		}
+
+		// 3. Fall back to hardcoded default
+		return DEFAULT_TRASH_RETENTION_DAYS;
 	}
 
 	// private
