@@ -1,19 +1,26 @@
+import { ResponseError } from 'src/common/dto/common.response-dto';
 import { getValuesOfEnum } from 'src/common/util/common.util';
 import { UserFM } from '../enum/user.enum';
 
-export const UserResponse = {
-	NOT_FOUND: {
-		message: 'User not found',
-	},
+export class UserExceptions {
+	public static NOT_FOUND(): ResponseError {
+		return new ResponseError({
+			message: 'User not found',
+		});
+	}
 
-	EMAIL_EXISTS: {
-		message: 'Email already exists',
-	},
+	public static EMAIL_EXISTS(): ResponseError {
+		return new ResponseError({
+			message: 'Email already exists',
+		});
+	}
 
-	EMAIL_NOT_FOUND: {
-		message: 'User by email not found',
-	},
-};
+	public static EMAIL_NOT_FOUND(): ResponseError {
+		return new ResponseError({
+			message: 'User by email not found',
+		});
+	}
+}
 
 export const USER_FIELDS_ALL = getValuesOfEnum(UserFM);
 export const USER_FIELDS_SIMPLE = [

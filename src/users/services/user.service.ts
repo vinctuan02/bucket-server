@@ -47,9 +47,7 @@ export class UsersService {
 		await this.userQueryService.ensureEmailNotExists(email);
 		input.password = password ? await hashPass(password) : null;
 		const user = await this.userQueryService.create(input);
-
 		this.eventEmitter.emit(AppEventType.USER_CREATED, user.id);
-
 		return user;
 	}
 
@@ -83,7 +81,7 @@ export class UsersService {
 		});
 	}
 
-	async findOne(id: string): Promise<User> {
+	async findOne(id: string) {
 		const user = await this.userRepo.findOne({ where: { id } });
 		if (!user) throw new NotFoundException(`User ${id} not found`);
 		return user;
