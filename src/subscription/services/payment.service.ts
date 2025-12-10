@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
@@ -21,13 +20,80 @@ export class PaymentService {
 		private readonly transactionService: TransactionService,
 		private readonly sepayService: SepayService,
 		private readonly userStorageService: UserStorageService,
-		private readonly configService: ConfigService,
 	) {}
 
 	/**
 	 * Initiate checkout process
 	 * Creates Transaction and Subscription, then calls Sepay API
 	 */
+	// async initiateCheckout(userId: string, planId: string) {
+	// 	this.logger.log(
+	// 		`Initiating checkout for user ${userId}, plan ${planId}`,
+	// 	);
+
+	// 	// Step 1: Retrieve Plan
+	// 	const plan = await this.planService.findById(planId);
+
+	// 	// Step 2: Create or find pending subscription
+	// 	let subscription = await this.subscriptionRepo.findOne({
+	// 		where: {
+	// 			userId,
+	// 			planId,
+	// 			isActive: false,
+	// 		},
+	// 	});
+
+	// 	if (!subscription) {
+	// 		subscription = this.subscriptionRepo.create({
+	// 			userId,
+	// 			planId,
+	// 			isActive: false,
+	// 			startDate: null,
+	// 			endDate: null,
+	// 		});
+	// 		subscription = await this.subscriptionRepo.save(subscription);
+	// 	}
+
+	// 	// Step 3: Create Transaction (UUID will be used as order_id)
+	// 	const transaction = await this.transactionService.create({
+	// 		userId,
+	// 		subscriptionId: subscription.id,
+	// 		amount: Number(plan.price),
+	// 		paymentMethod: 'bank_transfer',
+	// 		currency: 'VND',
+	// 	});
+
+	// 	this.logger.log(
+	// 		`Transaction created: ${transaction.id} for subscription ${subscription.id}`,
+	// 	);
+
+	// 	// Step 4: Prepare payment form data for frontend
+	// 	const orderInfo = `Thanh toan goi ${plan.name}`;
+	// 	const paymentForm = this.sepayService.preparePaymentForm(
+	// 		transaction.id,
+	// 		Number(plan.price),
+	// 		orderInfo,
+	// 	);
+
+	// 	this.logger.log(
+	// 		`Payment form prepared for transaction ${transaction.id}`,
+	// 	);
+
+	// 	// Step 5: Return payment form data to client
+	// 	return {
+	// 		status: TransactionStatus.PENDING,
+	// 		transactionId: transaction.id,
+	// 		checkoutUrl: paymentForm.checkoutUrl,
+	// 		formData: paymentForm.formData,
+	// 		subscription: {
+	// 			id: subscription.id,
+	// 			planName: plan.name,
+	// 			amount: plan.price,
+	// 			durationDays: plan.durationDays,
+	// 		},
+	// 	};
+	// }
+
 	async initiateCheckout(userId: string, planId: string) {
 		this.logger.log(
 			`Initiating checkout for user ${userId}, plan ${planId}`,
@@ -38,11 +104,7 @@ export class PaymentService {
 
 		// Step 2: Create or find pending subscription
 		let subscription = await this.subscriptionRepo.findOne({
-			where: {
-				userId,
-				planId,
-				isActive: false,
-			},
+			where: { userId, planId, isActive: false },
 		});
 
 		if (!subscription) {
@@ -56,63 +118,42 @@ export class PaymentService {
 			subscription = await this.subscriptionRepo.save(subscription);
 		}
 
-		// Step 3: Create Transaction (UUID will be used as order_id)
+		// Step 3: Create Transaction (UUID = order_invoice_number)
 		const transaction = await this.transactionService.create({
 			userId,
 			subscriptionId: subscription.id,
 			amount: Number(plan.price),
 			paymentMethod: 'bank_transfer',
 			currency: 'VND',
+			// status: TransactionStatus.PENDING, // Đừng quên set status
 		});
 
 		this.logger.log(
 			`Transaction created: ${transaction.id} for subscription ${subscription.id}`,
 		);
 
-		// Step 4: Call Sepay API to initiate payment
-		try {
-			const orderInfo = `Thanh toan goi ${plan.name}`;
-			const paymentInfo = await this.sepayService.initiatePayment(
-				transaction.id,
-				Number(plan.price),
-				orderInfo,
-			);
+		// Step 4: Chuẩn bị form data cho SePay
+		const orderDescription = `Thanh toan goi ${plan.name}`;
+		const paymentForm = this.sepayService.preparePaymentForm(
+			transaction.id, // UUID này sẽ là order_invoice_number
+			Number(plan.price),
+			orderDescription,
+			userId,
+		);
 
-			this.logger.log(
-				`Payment initiated successfully for transaction ${transaction.id}`,
-			);
-
-			// Step 5: Return payment info to client
-			return {
-				status: TransactionStatus.PENDING,
-				transactionId: transaction.id,
-				paymentInfo: {
-					paymentUrl: paymentInfo.paymentUrl,
-					description: orderInfo,
-				},
-				subscription: {
-					id: subscription.id,
-					planName: plan.name,
-					amount: plan.price,
-					durationDays: plan.durationDays,
-				},
-			};
-		} catch (error) {
-			// Update transaction status to ERROR if Sepay API fails
-			this.logger.error(
-				`Failed to initiate payment for transaction ${transaction.id}`,
-				error,
-			);
-
-			await this.transactionService.findById(transaction.id).then((t) => {
-				t.status = TransactionStatus.ERROR;
-				return this.transactionService['transactionRepo'].save(t);
-			});
-
-			throw new ResponseError({
-				message: 'Failed to initiate payment with Sepay',
-			});
-		}
+		// Step 5: Return payment info
+		return {
+			status: TransactionStatus.PENDING,
+			transactionId: transaction.id,
+			checkoutUrl: paymentForm.checkoutUrl,
+			formData: paymentForm.formData,
+			subscription: {
+				id: subscription.id,
+				planName: plan.name,
+				amount: plan.price,
+				durationDays: plan.durationDays,
+			},
+		};
 	}
 
 	/**
