@@ -59,6 +59,32 @@ export class PlanService {
 		});
 	}
 
+	async getListSimple(filter: GetListPlanDto): Promise<Plan[]> {
+		const { keywords } = filter;
+
+		const qb = this.planRepo.createQueryBuilder('plan');
+
+		// Only show active plans for public access
+		qb.andWhere('plan.isActive = :isActive', { isActive: true });
+
+		// Search by keywords
+		if (keywords && keywords.length > 0) {
+			qb.andWhere(
+				'(plan.name ILIKE ANY(:keywords) OR plan.description ILIKE ANY(:keywords))',
+				{
+					keywords: keywords.map((k) => `%${k}%`),
+				},
+			);
+		}
+
+		// Order by price ascending for better UX
+		qb.orderBy('plan.price', 'ASC');
+
+		const items = await qb.getMany();
+
+		return items;
+	}
+
 	async findById(id: string): Promise<Plan> {
 		const e = await this.planRepo.findOne({ where: { id } });
 

@@ -190,12 +190,6 @@ export const APP_PERMISSIONS = {
 		resource: Resource.PLAN,
 		description: 'Allow deleting storage plans',
 	},
-	MANAGE_PLAN: {
-		name: 'Manage Plan',
-		action: PermissionAction.MANAGE,
-		resource: Resource.PLAN,
-		description: 'Allow managing storage plans',
-	},
 
 	// --- SUBSCRIPTION (Quản lý Đăng ký) ---
 	READ_SUBSCRIPTION: {

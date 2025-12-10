@@ -48,6 +48,22 @@ export class TransactionService {
 	}
 
 	/**
+	 * Tìm transaction theo ID với đầy đủ thông tin chi tiết
+	 */
+	async findByIdWithDetails(id: string): Promise<Transaction> {
+		const transaction = await this.transactionRepo.findOne({
+			where: { id },
+			relations: ['subscription', 'subscription.plan', 'user'],
+		});
+
+		if (!transaction) {
+			throw new ResponseError({ message: 'Transaction not found' });
+		}
+
+		return transaction;
+	}
+
+	/**
 	 * Cập nhật trạng thái transaction thành SUCCESS
 	 */
 	async markAsSuccess(

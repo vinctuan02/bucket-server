@@ -14,6 +14,7 @@ import { PaymentService } from './services/payment.service';
 import { PlanService } from './services/plan.service';
 import { SepayService } from './services/sepay.service';
 import { TransactionService } from './services/transaction.service';
+import { WebhookService } from './services/webhook.service';
 
 @Module({
 	imports: [
@@ -22,7 +23,13 @@ import { TransactionService } from './services/transaction.service';
 		ScheduleModule.forRoot(),
 		UserStorageModule,
 	],
-	providers: [PlanService, SepayService, TransactionService, PaymentService],
+	providers: [
+		PlanService,
+		SepayService,
+		TransactionService,
+		PaymentService,
+		WebhookService,
+	],
 	controllers: [
 		PlanController,
 		PaymentController,

@@ -9,7 +9,7 @@ import {
 	Post,
 	Query,
 } from '@nestjs/common';
-import { RequiredPermissions } from 'src/auth/decorator/auth.decorator';
+import { Public, RequiredPermissions } from 'src/auth/decorator/auth.decorator';
 import { User } from 'src/common/decorators/common.decorator';
 import { ResponseSuccess } from 'src/common/dto/common.response-dto';
 import type { CurrentUser } from 'src/common/interface/common.interface';
@@ -37,7 +37,8 @@ export class UsersController {
 	}
 
 	@Get('simple')
-	@RequiredPermissions(APP_PERMISSIONS.READ_USER)
+	// @RequiredPermissions(APP_PERMISSIONS.READ_USER)
+	@Public()
 	async getListSimple(@Query() query: GetListUserDto) {
 		const data = await this.usersService.getListSimple(query);
 		return new ResponseSuccess({ data });

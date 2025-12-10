@@ -79,6 +79,7 @@ export class PaymentService {
 
 		// Step 4: Generate signed payment fields using SePayPgClient
 		const checkoutUrl = this.client.checkout.initCheckoutUrl();
+		const callbackUrls = this.generateCallbackUrls(transaction.id);
 		const formData = this.client.checkout.initOneTimePaymentFields({
 			operation: 'PURCHASE',
 			payment_method: 'BANK_TRANSFER',
@@ -87,9 +88,9 @@ export class PaymentService {
 			currency: 'VND',
 			order_description: `Subscription: ${plan.name}`,
 			customer_id: userId,
-			success_url: process.env.SEPAY_SUCCESS_URL || '',
-			error_url: process.env.SEPAY_ERROR_URL || '',
-			cancel_url: process.env.SEPAY_CANCEL_URL || '',
+			success_url: callbackUrls.success,
+			error_url: callbackUrls.error,
+			cancel_url: callbackUrls.cancel,
 		});
 
 		this.logger.log(
@@ -252,5 +253,138 @@ export class PaymentService {
 			});
 
 		return checkoutFormfields;
+	}
+
+	/**
+	 * Generate callback URLs with transaction ID appended as query parameter
+	 *
+	 * @param transactionId - UUID of the transaction to include in callback URLs
+	 * @returns Object containing success, error, and cancel URLs with transaction ID parameter
+	 */
+	private generateCallbackUrls(transactionId: string) {
+		const baseUrls = {
+			success: process.env.SEPAY_SUCCESS_URL || '',
+			error: process.env.SEPAY_ERROR_URL || '',
+			cancel: process.env.SEPAY_CANCEL_URL || '',
+		};
+
+		return {
+			success: this.appendTransactionId(baseUrls.success, transactionId),
+			error: this.appendTransactionId(baseUrls.error, transactionId),
+			cancel: this.appendTransactionId(baseUrls.cancel, transactionId),
+		};
+	}
+
+	/**
+	 * Append transaction ID to URL as query parameter
+	 *
+	 * @param url - Base URL to append transaction ID to
+	 * @param transactionId - Transaction ID to append as query parameter
+	 * @returns URL with transaction ID appended as 'transactionId' query parameter
+	 */
+	private appendTransactionId(url: string, transactionId: string): string {
+		if (!url) return '';
+
+		const separator = url.includes('?') ? '&' : '?';
+		return `${url}${separator}transactionId=${transactionId}`;
+	}
+
+	/**
+	 * Get transaction detail with access control
+	 *
+	 * @param transactionId - UUID of the transaction to retrieve
+	 * @param userId - ID of the user requesting the transaction
+	 * @returns Complete transaction details with subscription and plan information
+	 * @throws ResponseError with status 400 for invalid transaction ID format
+	 * @throws ResponseError with status 403 for access denied
+	 * @throws ResponseError with status 404 for transaction not found
+	 * @throws ResponseError with status 500 for server errors
+	 */
+	async getTransactionDetail(transactionId: string, userId: string) {
+		const transaction =
+			await this.transactionService.findByIdWithDetails(transactionId);
+
+		// Access control: ensure user can only access their own transactions
+		if (transaction.userId !== userId) {
+			throw new ResponseError({
+				message:
+					'Access denied: You can only view your own transactions',
+				statusCode: 403,
+			});
+		}
+
+		return {
+			id: transaction.id,
+			userId: transaction.userId,
+			amount: transaction.amount,
+			currency: transaction.currency,
+			paymentMethod: transaction.paymentMethod,
+			status: transaction.status,
+			transactionRef: transaction.transactionRef,
+			paymentGatewayId: transaction.paymentGatewayId,
+			paidAt: transaction.paidAt,
+			createdAt: transaction.createdAt,
+			updatedAt: transaction.updatedAt,
+			subscription: transaction.subscription
+				? {
+						id: transaction.subscription.id,
+						isActive: transaction.subscription.isActive,
+						startDate: transaction.subscription.startDate,
+						endDate: transaction.subscription.endDate,
+						plan: transaction.subscription.plan
+							? {
+									id: transaction.subscription.plan.id,
+									name: transaction.subscription.plan.name,
+									price: transaction.subscription.plan.price,
+									durationDays:
+										transaction.subscription.plan
+											.durationDays,
+									storageLimit:
+										transaction.subscription.plan
+											.storageLimit,
+								}
+							: null,
+					}
+				: null,
+		};
+	}
+
+	/**
+	 * Get user's transaction history
+	 */
+	async getTransactionHistory(userId: string) {
+		const transactions = await this.transactionService.findByUserId(userId);
+
+		return transactions.map((transaction) => ({
+			id: transaction.id,
+			amount: transaction.amount,
+			currency: transaction.currency,
+			status: transaction.status,
+			paymentMethod: transaction.paymentMethod,
+			paymentGatewayId: transaction.paymentGatewayId,
+			createdAt: transaction.createdAt,
+			paidAt: transaction.paidAt,
+			subscription: transaction.subscription
+				? {
+						id: transaction.subscription.id,
+						isActive: transaction.subscription.isActive,
+						startDate: transaction.subscription.startDate,
+						endDate: transaction.subscription.endDate,
+						plan: transaction.subscription.plan
+							? {
+									id: transaction.subscription.plan.id,
+									name: transaction.subscription.plan.name,
+									price: transaction.subscription.plan.price,
+									durationDays:
+										transaction.subscription.plan
+											.durationDays,
+									storageLimit:
+										transaction.subscription.plan
+											.storageLimit,
+								}
+							: null,
+					}
+				: null,
+		}));
 	}
 }

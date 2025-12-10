@@ -62,6 +62,22 @@ export class PlanController {
 		return new ResponseSuccess({ data });
 	}
 
+	@Get('simple')
+	@ApiOperation({
+		summary:
+			'Get simple list of plans without authentication (for public access)',
+	})
+	@ApiQuery({ type: GetListPlanDto })
+	@ApiResponse({
+		status: 200,
+		description: 'List of active plans for public access',
+		type: [PlanResponseDto],
+	})
+	async getListSimple(@Query() filter: GetListPlanDto) {
+		const data = await this.service.getListSimple(filter);
+		return new ResponseSuccess({ data });
+	}
+
 	@Get(':id')
 	@RequiredPermissions(APP_PERMISSIONS.READ_PLAN)
 	@ApiOperation({ summary: 'Get plan by ID' })
