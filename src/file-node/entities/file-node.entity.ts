@@ -44,6 +44,9 @@ export class FileNode extends BaseUUIDEntity {
 	@Column({ type: 'timestamptz', nullable: true })
 	deletedAt: Date | null;
 
+	@Column({ type: 'timestamptz', nullable: true })
+	scheduledDeletionAt: Date | null;
+
 	// relations
 	@OneToOne(() => FileBucket, { nullable: true })
 	@JoinColumn({ name: 'file_bucket_id' })

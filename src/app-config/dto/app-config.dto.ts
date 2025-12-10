@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, Min } from 'class-validator';
 
 export class UpdateAppConfigDto {
 	@ApiProperty({
@@ -10,6 +10,14 @@ export class UpdateAppConfigDto {
 	@IsInt()
 	@Min(1)
 	trashRetentionDays: number;
+
+	@ApiProperty({
+		example: 'http://103.75.182.213:9000/public/icon.png',
+		description: 'Website icon URL',
+		required: false,
+	})
+	@IsOptional()
+	icon?: string | null;
 }
 
 export class AppConfigResponseDto {
@@ -18,4 +26,10 @@ export class AppConfigResponseDto {
 		description: 'Number of days before permanent deletion from trash',
 	})
 	trashRetentionDays: number;
+
+	@ApiProperty({
+		example: 'http://103.75.182.213:9000/public/icon.png',
+		description: 'Website icon URL',
+	})
+	icon: string | null;
 }

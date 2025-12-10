@@ -3,6 +3,7 @@ export enum TransactionStatus {
 	SUCCESS = 'success',
 	FAILED = 'failed',
 	CANCELED = 'canceled',
+	ERROR = 'error',
 }
 
 export enum PaymentMethod {

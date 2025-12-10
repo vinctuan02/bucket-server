@@ -28,6 +28,9 @@ export class User extends BaseUUIDEntity {
 	@Column({ type: 'varchar', nullable: true })
 	providerId: string | null;
 
+	@Column({ type: 'int', nullable: true })
+	trashRetentionDays: number | null;
+
 	@OneToMany(() => UserRole, (userRole) => userRole.user)
 	userRoles: UserRole[];
 

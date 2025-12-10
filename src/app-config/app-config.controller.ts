@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put } from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -32,6 +32,22 @@ export class AppConfigController {
 	@ApiResponse({ status: 200, description: 'Config updated successfully' })
 	async update(@Body() dto: UpdateAppConfigDto) {
 		const data = await this.appConfigService.updateConfig(dto);
+		return new ResponseSuccess({ data });
+	}
+
+	@ApiBearerAuth()
+	@Post('icon-upload-url')
+	@ApiOperation({ summary: 'Get icon upload URL' })
+	@ApiResponse({ status: 200, description: 'Upload URL generated' })
+	async getIconUploadUrl(
+		@Body()
+		fileMetadata: {
+			fileName: string;
+			fileSize: number;
+			contentType: string;
+		},
+	) {
+		const data = await this.appConfigService.getIconUploadUrl(fileMetadata);
 		return new ResponseSuccess({ data });
 	}
 }

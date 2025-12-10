@@ -6,14 +6,13 @@ import { UserStorageModule } from 'src/user-storage/user-storage.module';
 import { PaymentDemoController } from './controllers/payment-demo.controller';
 import { PaymentController } from './controllers/payment.controller';
 import { PlanController } from './controllers/plan.controller';
-import { SePayWebhookController } from './controllers/sepay-webhook.controller';
+import { SepayWebhookController } from './controllers/sepay-webhook.controller';
 import { Plan } from './entities/plan.entity';
 import { Transaction } from './entities/transaction.entity';
 import { UserSubscription } from './entities/user-subscription.entity';
 import { PaymentService } from './services/payment.service';
 import { PlanService } from './services/plan.service';
-import { SePayService } from './services/sepay.service';
-import { SubscriptionService } from './services/subscription.service';
+import { SepayService } from './services/sepay.service';
 import { TransactionService } from './services/transaction.service';
 
 @Module({
@@ -23,19 +22,13 @@ import { TransactionService } from './services/transaction.service';
 		ScheduleModule.forRoot(),
 		UserStorageModule,
 	],
-	providers: [
-		PlanService,
-		SubscriptionService,
-		SePayService,
-		TransactionService,
-		PaymentService,
-	],
+	providers: [PlanService, SepayService, TransactionService, PaymentService],
 	controllers: [
 		PlanController,
 		PaymentController,
-		SePayWebhookController,
+		SepayWebhookController,
 		PaymentDemoController,
 	],
-	exports: [PlanService, SubscriptionService, PaymentService],
+	exports: [PlanService, PaymentService],
 })
 export class SubscriptionModule {}
