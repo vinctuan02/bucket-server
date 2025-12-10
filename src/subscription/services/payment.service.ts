@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
@@ -20,6 +21,7 @@ export class PaymentService {
 		private readonly transactionService: TransactionService,
 		private readonly sepayService: SePayService,
 		private readonly userStorageService: UserStorageService,
+		private readonly configService: ConfigService,
 	) {}
 
 	/**
