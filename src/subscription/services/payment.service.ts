@@ -1,99 +1,45 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { SePayPgClient } from 'sepay-pg-node';
 import { ResponseError } from 'src/common/dto/common.response-dto';
 import { UserStorageService } from 'src/user-storage/user-storage.service';
 import { Repository } from 'typeorm';
 import { UserSubscription } from '../entities/user-subscription.entity';
 import { TransactionStatus } from '../enum/subscription.enum';
 import { PlanService } from './plan.service';
-import { SepayService } from './sepay.service';
 import { TransactionService } from './transaction.service';
 
 @Injectable()
 export class PaymentService {
 	private readonly logger = new Logger(PaymentService.name);
 
+	private readonly client: SePayPgClient;
+
+	private initializeClient() {
+		return new SePayPgClient({
+			env:
+				process.env.SEPAY_ENV === 'production'
+					? 'production'
+					: 'sandbox',
+			merchant_id: process.env.SEPAY_MERCHANT_ID || '',
+			secret_key: process.env.SEPAY_SECRET_KEY || '',
+		});
+	}
+
 	constructor(
 		@InjectRepository(UserSubscription)
 		private subscriptionRepo: Repository<UserSubscription>,
 		private readonly planService: PlanService,
 		private readonly transactionService: TransactionService,
-		private readonly sepayService: SepayService,
 		private readonly userStorageService: UserStorageService,
-	) {}
+	) {
+		this.client = this.initializeClient();
+	}
 
 	/**
 	 * Initiate checkout process
-	 * Creates Transaction and Subscription, then calls Sepay API
+	 * Creates Transaction and Subscription, then generates signed payment fields
 	 */
-	// async initiateCheckout(userId: string, planId: string) {
-	// 	this.logger.log(
-	// 		`Initiating checkout for user ${userId}, plan ${planId}`,
-	// 	);
-
-	// 	// Step 1: Retrieve Plan
-	// 	const plan = await this.planService.findById(planId);
-
-	// 	// Step 2: Create or find pending subscription
-	// 	let subscription = await this.subscriptionRepo.findOne({
-	// 		where: {
-	// 			userId,
-	// 			planId,
-	// 			isActive: false,
-	// 		},
-	// 	});
-
-	// 	if (!subscription) {
-	// 		subscription = this.subscriptionRepo.create({
-	// 			userId,
-	// 			planId,
-	// 			isActive: false,
-	// 			startDate: null,
-	// 			endDate: null,
-	// 		});
-	// 		subscription = await this.subscriptionRepo.save(subscription);
-	// 	}
-
-	// 	// Step 3: Create Transaction (UUID will be used as order_id)
-	// 	const transaction = await this.transactionService.create({
-	// 		userId,
-	// 		subscriptionId: subscription.id,
-	// 		amount: Number(plan.price),
-	// 		paymentMethod: 'bank_transfer',
-	// 		currency: 'VND',
-	// 	});
-
-	// 	this.logger.log(
-	// 		`Transaction created: ${transaction.id} for subscription ${subscription.id}`,
-	// 	);
-
-	// 	// Step 4: Prepare payment form data for frontend
-	// 	const orderInfo = `Thanh toan goi ${plan.name}`;
-	// 	const paymentForm = this.sepayService.preparePaymentForm(
-	// 		transaction.id,
-	// 		Number(plan.price),
-	// 		orderInfo,
-	// 	);
-
-	// 	this.logger.log(
-	// 		`Payment form prepared for transaction ${transaction.id}`,
-	// 	);
-
-	// 	// Step 5: Return payment form data to client
-	// 	return {
-	// 		status: TransactionStatus.PENDING,
-	// 		transactionId: transaction.id,
-	// 		checkoutUrl: paymentForm.checkoutUrl,
-	// 		formData: paymentForm.formData,
-	// 		subscription: {
-	// 			id: subscription.id,
-	// 			planName: plan.name,
-	// 			amount: plan.price,
-	// 			durationDays: plan.durationDays,
-	// 		},
-	// 	};
-	// }
-
 	async initiateCheckout(userId: string, planId: string) {
 		this.logger.log(
 			`Initiating checkout for user ${userId}, plan ${planId}`,
@@ -118,35 +64,44 @@ export class PaymentService {
 			subscription = await this.subscriptionRepo.save(subscription);
 		}
 
-		// Step 3: Create Transaction (UUID = order_invoice_number)
+		// Step 3: Create Transaction (UUID will be used as order_invoice_number)
 		const transaction = await this.transactionService.create({
 			userId,
 			subscriptionId: subscription.id,
 			amount: Number(plan.price),
 			paymentMethod: 'bank_transfer',
 			currency: 'VND',
-			// status: TransactionStatus.PENDING, // Đừng quên set status
 		});
 
 		this.logger.log(
 			`Transaction created: ${transaction.id} for subscription ${subscription.id}`,
 		);
 
-		// Step 4: Chuẩn bị form data cho SePay
-		const orderDescription = `Thanh toan goi ${plan.name}`;
-		const paymentForm = this.sepayService.preparePaymentForm(
-			transaction.id, // UUID này sẽ là order_invoice_number
-			Number(plan.price),
-			orderDescription,
-			userId,
+		// Step 4: Generate signed payment fields using SePayPgClient
+		const checkoutUrl = this.client.checkout.initCheckoutUrl();
+		const formData = this.client.checkout.initOneTimePaymentFields({
+			operation: 'PURCHASE',
+			payment_method: 'BANK_TRANSFER',
+			order_invoice_number: transaction.id,
+			order_amount: Number(plan.price),
+			currency: 'VND',
+			order_description: `Subscription: ${plan.name}`,
+			customer_id: userId,
+			success_url: process.env.SEPAY_SUCCESS_URL || '',
+			error_url: process.env.SEPAY_ERROR_URL || '',
+			cancel_url: process.env.SEPAY_CANCEL_URL || '',
+		});
+
+		this.logger.log(
+			`Payment form prepared for transaction ${transaction.id}`,
 		);
 
-		// Step 5: Return payment info
+		// Step 5: Return checkout data to frontend
 		return {
 			status: TransactionStatus.PENDING,
 			transactionId: transaction.id,
-			checkoutUrl: paymentForm.checkoutUrl,
-			formData: paymentForm.formData,
+			checkoutUrl,
+			formData,
 			subscription: {
 				id: subscription.id,
 				planName: plan.name,
@@ -271,5 +226,31 @@ export class PaymentService {
 					}
 				: null,
 		};
+	}
+
+	initCheckoutUrl() {
+		const checkoutURL = this.client.checkout.initCheckoutUrl();
+		return checkoutURL;
+	}
+
+	initOneTimePaymentFields() {
+		const checkoutFormfields =
+			this.client.checkout.initOneTimePaymentFields({
+				operation: 'PURCHASE',
+				payment_method: 'BANK_TRANSFER',
+				// hoặc
+				// payment_method: 'NAPAS_BANK_TRANSFER',
+				order_invoice_number: 'INV_001',
+				order_amount: 29000,
+				currency: 'VND',
+				order_description: 'Thanh toán gói Basic 100GB',
+				customer_id: 'user-123',
+				success_url: 'https://example.com/success',
+				error_url: 'https://example.com/error',
+				cancel_url: 'https://example.com/cancel',
+				custom_data: 'optional',
+			});
+
+		return checkoutFormfields;
 	}
 }
