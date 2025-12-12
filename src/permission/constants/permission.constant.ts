@@ -224,6 +224,14 @@ export const APP_PERMISSIONS = {
 		resource: Resource.APP_CONFIG,
 		description: 'Allow updating app configuration',
 	},
+
+	// --- DASHBOARD (Quản lý Dashboard) ---
+	READ_DASHBOARD: {
+		name: 'Read Dashboard',
+		action: PermissionAction.READ,
+		resource: Resource.DASHBOARD,
+		description: 'Allow viewing dashboard analytics and metrics',
+	},
 };
 
 export const PERMISSIONS_SEED = Object.values(APP_PERMISSIONS);

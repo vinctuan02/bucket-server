@@ -13,6 +13,7 @@ import { BucketModule } from './bucket/bucket.module';
 import { getDatabaseConfig } from './common/config/common.config-db';
 import { validationSchema } from './common/config/common.validate-env';
 import { TestController } from './common/controllers/test.controller';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { FileNodePermissionModule } from './file-node-permission/file-node-permission.module';
 import { FileNodeModule } from './file-node/file-node.module';
 import { NotificationModule } from './notification/notification.module';
@@ -56,6 +57,7 @@ import { UsersModule } from './users/user.module';
 		FileNodePermissionModule,
 		FileNodeModule,
 		UserStorageModule,
+		DashboardModule,
 	],
 	controllers: [AppController, TestController],
 	providers: [
